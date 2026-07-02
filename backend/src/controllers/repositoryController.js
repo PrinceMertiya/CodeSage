@@ -1,9 +1,11 @@
 const { cloneRepository } = require("../services/repositoryService");
 const { scanRepository } = require("../services/scannerService");
 const { readFiles } = require("../services/fileReaderService");
+const { detectProject } = require("../services/projectDetectorService");
 
 const analyzeRepository = async (req, res) => {
     const { repositoryUrl } = req.body;
+    
 
     // Check if URL is provided
     if (!repositoryUrl) {
@@ -25,18 +27,33 @@ const analyzeRepository = async (req, res) => {
         // Clone repository
         const repositoryPath = await cloneRepository(repositoryUrl);
 
+        const { detectProject } = require("../services/projectDetectorService");
+
         // Scan repository for files
         const files = await scanRepository(repositoryPath);
 
         // Read file contents
-        const fileContents = await readFiles(files);
+        const fileContents = await readFiles(
+            files,
+            repositoryPath
+        );
+        const project = detectProject(fileContents);
 
+        // return res.status(200).json({
+        //     success: true,
+        //     message: "Repository analyzed successfully",
+        //     repositoryPath,
+        //     totalFiles: fileContents.length,
+        //     files: fileContents
+        // });
         return res.status(200).json({
+
             success: true,
-            message: "Repository analyzed successfully",
-            repositoryPath,
-            totalFiles: fileContents.length,
-            files: fileContents
+
+            project,
+
+            totalFiles: fileContents.length
+
         });
 
     } catch (error) {
