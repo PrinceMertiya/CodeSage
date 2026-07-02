@@ -1,6 +1,9 @@
 const fs = require("fs/promises");
 const path = require("path");
+
+const { parseJavaScript } = require("./jsParser");
 const { detectLanguage } = require("../utils/languageDetector");
+const { detectStructure } = require("./structureDetectorService");
 
 const readFiles = async (files, repositoryRoot) => {
 
@@ -8,11 +11,57 @@ const readFiles = async (files, repositoryRoot) => {
 
     for (const file of files) {
 
+        const language = detectLanguage(
+            path.extname(file)
+        );
+
+        let content;
+
         try {
-            content = await fs.readFile(file, "utf8");
+
+            content = await fs.readFile(
+                file,
+                "utf8"
+            );
+
         } catch {
-            content = await fs.readFile(file, "utf16le");
+
+            content = await fs.readFile(
+                file,
+                "utf16le"
+            );
+
         }
+
+//         let structure = null;
+
+//         if (language === "JavaScript") {
+
+//         //     structure = parseJavaScript(content);
+//         const structure = detectStructure(
+//     language,
+//     content
+// );
+let structure = null;
+
+if (language === "JavaScript") {
+
+        structure = detectStructure(
+        language,
+        content
+    );
+
+}
+
+        
+
+        
+        console.log({
+    name: path.basename(file),
+    language,
+    structure
+});
+
 
         results.push({
 
@@ -20,17 +69,22 @@ const readFiles = async (files, repositoryRoot) => {
 
             name: path.basename(file),
 
-            relativePath: path.relative(repositoryRoot, file),
+            relativePath: path.relative(
+                repositoryRoot,
+                file
+            ),
 
             extension: path.extname(file),
 
-            language: detectLanguage(path.extname(file)),
+            language,
 
             size: Buffer.byteLength(content),
 
             lines: content.split("\n").length,
 
-            content
+            content,
+
+            structure
 
         });
 

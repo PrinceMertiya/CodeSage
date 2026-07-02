@@ -4,8 +4,8 @@ const { readFiles } = require("../services/fileReaderService");
 const { detectProject } = require("../services/projectDetectorService");
 
 const analyzeRepository = async (req, res) => {
+
     const { repositoryUrl } = req.body;
-    
 
     // Check if URL is provided
     if (!repositoryUrl) {
@@ -24,49 +24,55 @@ const analyzeRepository = async (req, res) => {
     }
 
     try {
+
         // Clone repository
         const repositoryPath = await cloneRepository(repositoryUrl);
 
-        const { detectProject } = require("../services/projectDetectorService");
-
-        // Scan repository for files
+        // Scan repository
         const files = await scanRepository(repositoryPath);
 
-        // Read file contents
+        // Read all files
         const fileContents = await readFiles(
             files,
             repositoryPath
         );
+
+        // Detect project information
         const project = detectProject(fileContents);
 
-        // return res.status(200).json({
-        //     success: true,
-        //     message: "Repository analyzed successfully",
-        //     repositoryPath,
-        //     totalFiles: fileContents.length,
-        //     files: fileContents
-        // });
         return res.status(200).json({
 
             success: true,
 
+            message: "Repository analyzed successfully",
+
+            repositoryPath,
+
             project,
 
-            totalFiles: fileContents.length
+            totalFiles: fileContents.length,
+
+            // files: fileContents
+
+            files: fileContents.filter(
+    file => file.language === "JavaScript"
+)
 
         });
 
     } catch (error) {
+
         console.error(error);
 
         return res.status(500).json({
             success: false,
             message: error.message || "Internal Server Error"
         });
+
     }
+
 };
 
 module.exports = {
     analyzeRepository
 };
-
