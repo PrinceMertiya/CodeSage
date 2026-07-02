@@ -1,9 +1,14 @@
-const { scanRepository } = require("./src/services/scannerService");
+const { parseJavaScript } = require("./jsParser");
 
-(async () => {
+const code = `
+const express = require("express");
+const mongoose = require("mongoose");
 
-    const files = await scanRepository("./workspace/react");
+import axios from "axios";
 
-    console.log(files);
+function hello(){}
 
-})();
+module.exports = {};
+`;
+
+console.log(parseJavaScript(code));

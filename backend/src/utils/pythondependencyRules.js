@@ -1,65 +1,62 @@
-const { pythonDependencyRules } = require("../utils/pythonDependencyRules");
+const pythonDependencyRules = {
 
-const parseRequirements = (content) => {
+    streamlit: {
+        category: "framework",
+        value: "Streamlit"
+    },
 
-    const result = {
+    flask: {
+        category: "framework",
+        value: "Flask"
+    },
 
-        framework: [],
+    django: {
+        category: "framework",
+        value: "Django"
+    },
 
-        ai: [],
+    fastapi: {
+        category: "framework",
+        value: "FastAPI"
+    },
 
-        database: [],
+    "sentence-transformers": {
+        category: "ai",
+        value: "Sentence Transformers"
+    },
 
-        visualization: [],
+    transformers: {
+        category: "ai",
+        value: "Hugging Face Transformers"
+    },
 
-        pdf: []
+    torch: {
+        category: "ai",
+        value: "PyTorch"
+    },
 
-    };
+    tensorflow: {
+        category: "ai",
+        value: "TensorFlow"
+    },
 
-    const lines = content.split("\n");
+    pdfplumber: {
+        category: "pdf",
+        value: "PDF Processing"
+    },
 
-    for (let line of lines) {
+    matplotlib: {
+        category: "visualization",
+        value: "Matplotlib"
+    },
 
-        line = line.trim().toLowerCase();
-
-        if (!line) continue;
-
-        const packageName = line.split(/[<>=~!]+/)[0].trim();
-
-        const rule = pythonDependencyRules[packageName];
-
-        if (!rule) continue;
-
-        switch (rule.category) {
-
-            case "framework":
-                result.framework.push(rule.value);
-                break;
-
-            case "ai":
-                result.ai.push(rule.value);
-                break;
-
-            case "database":
-                result.database.push(rule.value);
-                break;
-
-            case "visualization":
-                result.visualization.push(rule.value);
-                break;
-
-            case "pdf":
-                result.pdf.push(rule.value);
-                break;
-
-        }
-
+    altair: {
+        category: "visualization",
+        value: "Altair"
     }
-
-    return result;
 
 };
 
 module.exports = {
-    parseRequirements
+    pythonDependencyRules
 };

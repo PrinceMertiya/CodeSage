@@ -8,7 +8,11 @@ const readFiles = async (files, repositoryRoot) => {
 
     for (const file of files) {
 
-        const content = await fs.readFile(file, "utf8");
+        try {
+            content = await fs.readFile(file, "utf8");
+        } catch {
+            content = await fs.readFile(file, "utf16le");
+        }
 
         results.push({
 
