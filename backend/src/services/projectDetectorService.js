@@ -1,6 +1,10 @@
+
 const detectProject = (files) => {
 
+    const { parseRequirements } = require("./pythonDependencyParser");
+
     const project = {
+        
 
         primaryLanguage: null,
 
@@ -22,8 +26,22 @@ const detectProject = (files) => {
     }
 
     if (file.name === "requirements.txt") {
-        project.packageManager = "pip";
-    }
+
+    project.packageManager = "pip";
+
+    const pythonProject = parseRequirements(file.content);
+
+    project.framework.push(...pythonProject.framework);
+
+    project.database.push(...pythonProject.database);
+
+    project.libraries.push(...pythonProject.ai);
+
+    project.libraries.push(...pythonProject.visualization);
+
+    project.libraries.push(...pythonProject.pdf);
+
+}
 
     if (file.name === "pom.xml") {
         project.packageManager = "Maven";
