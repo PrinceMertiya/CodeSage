@@ -2,13 +2,18 @@ const { parseJavaScript } = require("./jsParser");
 
 const code = `
 const express = require("express");
-const mongoose = require("mongoose");
 
-import axios from "axios";
+class UserController {
 
-function hello(){}
+}
 
-module.exports = {};
+class AuthService {
+
+}
+
+function login(){}
+
+const logout = () => {};
 `;
 
 console.log(parseJavaScript(code));

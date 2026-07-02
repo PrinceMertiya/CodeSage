@@ -5,6 +5,7 @@ const parseJavaScript = (content) => {
         imports: [],
         classes: [],
         functions: [],
+        arrowFunctions: [],
         exports: []
 
     };
@@ -13,6 +14,13 @@ const parseJavaScript = (content) => {
     const importRegex = /import.*?from\s+["'`](.*?)["'`]/g;
 
     const functionRegex = /function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g;
+    const classRegex = /class\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g;
+
+    const methodRegex =
+        /^\s*([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\([^)]*\)\s*\{/gm;
+
+    const arrowFunctionRegex =
+        /(?:const|let|var)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g;
 
     let match;
 
@@ -24,11 +32,26 @@ const parseJavaScript = (content) => {
         result.imports.push(match[1]);
     }
 
+    while ((match = classRegex.exec(content)) !== null) {
+
+       result.classes.push({
+    name: match[1],
+    methods: []
+       });
+
+    }
+
+
     while ((match = functionRegex.exec(content)) !== null) {
 
-    result.functions.push(match[1]);
+        result.functions.push(match[1]);
 
-}
+    }
+    while ((match = arrowFunctionRegex.exec(content)) !== null) {
+
+        result.arrowFunctions.push(match[1]);
+
+    }
 
     return result;
 
