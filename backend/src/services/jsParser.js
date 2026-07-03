@@ -96,6 +96,8 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     while ((match = functionRegex.exec(content)) !== null) {
 
+        id: `function_${result.functions.length + 1}`,
+
         result.functions.push(match[1]);
 
     }
@@ -105,6 +107,8 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
     // ==========================
 
     while ((match = arrowFunctionRegex.exec(content)) !== null) {
+
+        id: `arrow_${result.arrowFunctions.length + 1}`,
 
         result.arrowFunctions.push(match[1]);
 
@@ -163,6 +167,8 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
         }
 
         result.classes.push({
+
+            id: `class_${result.classes.length + 1}`,
 
             name: className,
 

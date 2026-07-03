@@ -3,6 +3,8 @@ const { scanRepository } = require("../services/scannerService");
 const { readFiles } = require("../services/fileReaderService");
 const { detectProject } = require("../services/projectDetectorService");
 
+const { generateChunks } = require("../services/chunkGeneratorService");
+
 const analyzeRepository = async (req, res) => {
 
     const { repositoryUrl } = req.body;
@@ -37,6 +39,8 @@ const analyzeRepository = async (req, res) => {
             repositoryPath
         );
 
+        const chunks = generateChunks(fileContents);
+
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -51,12 +55,16 @@ const analyzeRepository = async (req, res) => {
             project,
 
             totalFiles: fileContents.length,
+            
 
             // files: fileContents
 
             files: fileContents.filter(
-    file => file.language === "JavaScript"
-)
+                file => file.language === "JavaScript"
+            ),
+
+            chunks
+            
 
         });
 

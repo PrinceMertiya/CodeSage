@@ -120,6 +120,7 @@ for (const line of lines) {
 
         currentClass = {
 
+            id: `class_${result.classes.length + 1}`,
             name: classMatch[1],
             methods: []
 
@@ -162,7 +163,13 @@ for (const line of lines) {
 
     if (!isMethod) {
 
-        result.functions.push(functionName);
+        result.functions.push({
+
+            id: `function_${result.functions.length + 1}`,
+
+            name: functionName
+
+});
 
     }
 
