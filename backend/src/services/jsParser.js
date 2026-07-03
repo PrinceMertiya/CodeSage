@@ -1,5 +1,7 @@
 const parseJavaScript = (content) => {
 
+    const { getLineNumber } = require("./parserUtils");
+
     console.log("JS Parser Executed");
 
     const result = {
@@ -96,9 +98,57 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     while ((match = functionRegex.exec(content)) !== null) {
 
-        id: `function_${result.functions.length + 1}`,
+    const startLine = getLineNumber(
+    content,
+    match.index
+);
 
-        result.functions.push(match[1]);
+    const functionName = match[1];
+
+    const startIndex = functionRegex.lastIndex - 1;
+
+let braceCount = 1;
+
+let currentIndex = startIndex + 1;
+
+while (
+    currentIndex < content.length &&
+    braceCount > 0
+) {
+
+    if (content[currentIndex] === "{") {
+
+        braceCount++;
+
+    }
+
+    else if (content[currentIndex] === "}") {
+
+        braceCount--;
+
+    }
+
+    currentIndex++;
+
+}
+
+const endLine = getLineNumber(
+    content,
+    currentIndex
+);
+
+result.functions.push({
+
+    id: `function_${result.functions.length + 1}`,
+
+    name: functionName,
+
+    startLine,
+
+    endLine
+    
+
+});
 
     }
 
@@ -108,81 +158,134 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     while ((match = arrowFunctionRegex.exec(content)) !== null) {
 
+    const functionName = match[1];
+
+    const startLine = getLineNumber(
+        content,
+        match.index
+    );
+
+    const startIndex = arrowFunctionRegex.lastIndex - 1;
+
+    let braceCount = 1;
+
+    let currentIndex = startIndex + 1;
+
+    while (
+        currentIndex < content.length &&
+        braceCount > 0
+    ) {
+
+        if (content[currentIndex] === "{") {
+
+            braceCount++;
+
+        }
+
+        else if (content[currentIndex] === "}") {
+
+            braceCount--;
+
+        }
+
+        currentIndex++;
+
+    }
+
+    const endLine = getLineNumber(
+        content,
+        currentIndex
+    );
+
+    result.arrowFunctions.push({
+
         id: `arrow_${result.arrowFunctions.length + 1}`,
 
-        result.arrowFunctions.push(match[1]);
+        name: functionName,
+
+        startLine,
+
+        endLine
+
+    });
+
+}
+
+
+while ((match = classRegex.exec(content)) !== null) {
+
+    const className = match[1];
+
+    const startIndex = classRegex.lastIndex - 1;
+
+    let braceCount = 1;
+
+    let currentIndex = startIndex + 1;
+
+    while (
+        currentIndex < content.length &&
+        braceCount > 0
+    ) {
+
+        if (content[currentIndex] === "{") {
+            braceCount++;
+        }
+        else if (content[currentIndex] === "}") {
+            braceCount--;
+        }
+
+        currentIndex++;
+    }
+
+    const classBody = content.substring(
+        startIndex,
+        currentIndex
+    );
+
+    const methods = [];
+
+    let methodMatch;
+
+    while (
+        (methodMatch = methodRegex.exec(classBody)) !== null
+    ) {
+
+        methods.push(methodMatch[1]);
 
     }
 
-    // ==========================
-    // Classes & Methods
-    // ==========================
+    const startLine = getLineNumber(
+        content,
+        match.index
+    );
 
-    while ((match = classRegex.exec(content)) !== null) {
+    const endLine = getLineNumber(
+        content,
+        currentIndex
+    );
 
-        const className = match[1];
+    result.classes.push({
 
-        const startIndex = classRegex.lastIndex - 1;
+        id: `class_${result.classes.length + 1}`,
 
-        let braceCount = 1;
+        name: className,
 
-        let currentIndex = startIndex + 1;
+        startLine,
 
-        while (
-            currentIndex < content.length &&
-            braceCount > 0
-        ) {
+        endLine,
 
-            if (content[currentIndex] === "{") {
+        methods
 
-                braceCount++;
+    });
 
-            }
-
-            else if (content[currentIndex] === "}") {
-
-                braceCount--;
-
-            }
-
-            currentIndex++;
-
-        }
-
-        const classBody = content.substring(
-            startIndex,
-            currentIndex
-        );
-
-        const methods = [];
-
-        let methodMatch;
-
-        while (
-            (methodMatch = methodRegex.exec(classBody)) !== null
-        ) {
-
-            methods.push(methodMatch[1]);
-
-        }
-
-        result.classes.push({
-
-            id: `class_${result.classes.length + 1}`,
-
-            name: className,
-
-            methods
-
-        });
-
-    }
+}
+    
 
     result.imports = [...new Set(result.imports)];
 
-    result.functions = [...new Set(result.functions)];
+    // result.functions = [...new Set(result.functions)];
 
-    result.arrowFunctions = [...new Set(result.arrowFunctions)];
+    // result.arrowFunctions = [...new Set(result.arrowFunctions)];
 
     result.exports = [...new Set(result.exports)];
 

@@ -75,7 +75,7 @@ const generateChunks = (files) => {
 
             for (const func of file.structure.functions) {
 
-                console.log("Generating function chunk:", func.name);
+                // console.log("Generating function chunk:", func.name);
 
                 generatedSpecialChunk = true;
 
@@ -119,7 +119,7 @@ const generateChunks = (files) => {
 
             for (const cls of file.structure.classes) {
 
-                console.log("Generating class chunk:", cls.name);
+                // console.log("Generating class chunk:", cls.name);
 
                 generatedSpecialChunk = true;
 
@@ -165,7 +165,7 @@ const generateChunks = (files) => {
 
             for (const func of file.structure.arrowFunctions) {
 
-                console.log("Generating arrow function chunk:", func.name);
+                // console.log("Generating arrow function chunk:", func.name);
 
                 generatedSpecialChunk = true;
 

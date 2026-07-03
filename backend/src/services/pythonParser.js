@@ -8,6 +8,8 @@ const parsePython = (content) => {
 
     };
 
+    const { getLineNumber } = require("./parserUtils");
+
     const importRegex =
         /^import\s+(.+)$/gm;
 
@@ -18,13 +20,13 @@ const parsePython = (content) => {
     //     /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)/gm;
 
     const classRegex =
-    /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)[^\n]*:/gm;
+        /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)[^\n]*:/gm;
 
     // const functionRegex =
     //     /^def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
 
     const functionRegex =
-    /^(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
+        /^(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
 
     let match;
 
@@ -46,71 +48,23 @@ const parsePython = (content) => {
 
     }
 
-    // while ((match = classRegex.exec(content)) !== null) {
-
-    //     result.classes.push({
-
-    //         name: match[1],
-
-    //         methods: []
-
-    //     });
-
-    // }
-
-
-//     while ((match = classRegex.exec(content)) !== null) {
-
-//     const className = match[1];
-
-//     const startIndex = match.index;
-
-//     const nextClass = classRegex.exec(content);
-
-//     const endIndex = nextClass
-//         ? nextClass.index
-//         : content.length;
-
-//     if (nextClass) {
-//         classRegex.lastIndex = nextClass.index;
-//     }
-
-//     const classBody = content.substring(
-//         startIndex,
-//         endIndex
-//     );
-
-//     // const methodRegex =
-//     //     /^\s{4}def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
-
-//     const methodRegex =
-//     /^\s+(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
-
-//     const methods = [];
-
-//     let methodMatch;
-
-//     while ((methodMatch = methodRegex.exec(classBody)) !== null) {
-
-//         methods.push(methodMatch[1]);
-
-//     }
-
-//     result.classes.push({
-
-//         name: className,
-
-//         methods
-
-//     });
-
-// }
 
     const lines = content.split("\n");
 
 let currentClass = null;
 
-for (const line of lines) {
+for (let i = 0; i < lines.length; i++) {
+
+    const line = lines[i];
+
+    // Leaving the class
+    if (
+        currentClass &&
+        line.trim() !== "" &&
+        line.match(/^\s*/)
+    ) {
+        currentClass = null;
+    }
 
     const classMatch = line.match(
         /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)[^\n]*:/
@@ -118,10 +72,41 @@ for (const line of lines) {
 
     if (classMatch) {
 
+        const classIndent = line.match(/^\s*/)[0].length;
+
+        let endLine = i + 1;
+
+        for (let j = i + 1; j < lines.length; j++) {
+
+            const nextLine = lines[j];
+
+            if (nextLine.trim() === "") {
+                continue;
+            }
+
+            const indent = nextLine.match(/^\s*/)[0].length;
+
+            if (indent <= classIndent) {
+
+                endLine = j;
+
+                break;
+
+            }
+
+            endLine = j + 1;
+        }
+
         currentClass = {
 
             id: `class_${result.classes.length + 1}`,
+
             name: classMatch[1],
+
+            startLine: i + 1,
+
+            endLine,
+
             methods: []
 
         };
@@ -129,54 +114,78 @@ for (const line of lines) {
         result.classes.push(currentClass);
 
         continue;
-
     }
 
     const methodMatch = line.match(
-        /^\s+(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
+        /^\s{4}(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
     );
 
     if (methodMatch && currentClass) {
 
         currentClass.methods.push(methodMatch[1]);
 
-        
-
     }
-    
 
 }
 
-    // while ((match = functionRegex.exec(content)) !== null) {
-
-    //     result.functions.push(match[1]);
-
-    // }
 
     while ((match = functionRegex.exec(content)) !== null) {
 
-    const functionName = match[1];
+        const startLine = getLineNumber(
+            content,
+            match.index
+        );
 
-    const isMethod = result.classes.some(cls =>
-        cls.methods.includes(functionName)
-    );
 
-    if (!isMethod) {
+        const functionName = match[1];
 
-        result.functions.push({
+        const isMethod = result.classes.some(cls =>
+            cls.methods.includes(functionName)
+        );
 
-            id: `function_${result.functions.length + 1}`,
 
-            name: functionName
+        let endLine = startLine;
 
-});
+        const currentIndent = lines[startLine - 1].match(/^\s*/)[0].length;
+
+        for (let i = startLine; i < lines.length; i++) {
+
+            const line = lines[i];
+
+            if (line.trim() === "") {
+                continue;
+            }
+
+            const indent = line.match(/^\s*/)[0].length;
+
+            if (indent <= currentIndent) {
+                endLine = i;
+                break;
+            }
+
+            endLine = i + 1;
+        }
+
+        if (!isMethod) {
+
+            result.functions.push({
+
+                id: `function_${result.functions.length + 1}`,
+
+                name: functionName,
+
+                startLine,
+
+                endLine
+
+            });
+
+        }
 
     }
 
-}
-
     result.imports = [...new Set(result.imports)];
-    result.functions = [...new Set(result.functions)];
+    // result.functions = [...new Set(result.functions)];
 
     return result;
 
