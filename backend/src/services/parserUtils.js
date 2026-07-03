@@ -7,6 +7,23 @@ const getLineNumber = (content, index) => {
 
 };
 
+const extractContent = (
+    content,
+    startLine,
+    endLine
+) => {
+
+    return content
+        .split("\n")
+        .slice(startLine - 1, endLine)
+        .join("\n");
+
+};
+
 module.exports = {
-    getLineNumber
+
+    getLineNumber,
+
+    extractContent
+
 };

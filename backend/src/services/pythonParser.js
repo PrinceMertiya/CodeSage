@@ -8,7 +8,13 @@ const parsePython = (content) => {
 
     };
 
-    const { getLineNumber } = require("./parserUtils");
+    const {
+
+    getLineNumber,
+
+    extractContent
+
+} = require("./parserUtils");
 
     const importRegex =
         /^import\s+(.+)$/gm;
@@ -176,7 +182,13 @@ for (let i = 0; i < lines.length; i++) {
 
                 startLine,
 
-                endLine
+                endLine,
+
+                content: extractContent(
+        content,
+        startLine,
+        endLine
+    )
 
             });
 

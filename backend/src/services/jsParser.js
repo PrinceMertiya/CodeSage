@@ -1,6 +1,12 @@
 const parseJavaScript = (content) => {
 
-    const { getLineNumber } = require("./parserUtils");
+    const {
+
+    getLineNumber,
+
+    extractContent
+
+} = require("./parserUtils");
 
     console.log("JS Parser Executed");
 
@@ -145,7 +151,11 @@ result.functions.push({
 
     startLine,
 
-    endLine
+    endLine,
+    content: extractContent(
+        content,
+        startLine,
+        endLine)
     
 
 });
@@ -205,7 +215,12 @@ result.functions.push({
 
         startLine,
 
-        endLine
+        endLine,
+
+        content: extractContent(
+        content,
+        startLine,
+        endLine)
 
     });
 
@@ -273,6 +288,11 @@ while ((match = classRegex.exec(content)) !== null) {
         startLine,
 
         endLine,
+
+        content: extractContent(
+        content,
+        startLine,
+        endLine),
 
         methods
 
