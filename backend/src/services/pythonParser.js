@@ -67,7 +67,7 @@ for (let i = 0; i < lines.length; i++) {
     if (
         currentClass &&
         line.trim() !== "" &&
-        line.match(/^\s*/)
+        /^\S/.test(line)
     ) {
         currentClass = null;
     }
@@ -105,17 +105,22 @@ for (let i = 0; i < lines.length; i++) {
 
         currentClass = {
 
-            id: `class_${result.classes.length + 1}`,
+    id,
 
-            name: classMatch[1],
+    name,
 
-            startLine: i + 1,
+    startLine,
 
-            endLine,
+    endLine,
 
-            methods: []
+    content: extractContent(
+        content,
+        i + 1,
+        endLine
+    ),
 
-        };
+        methods
+        }
 
         result.classes.push(currentClass);
 

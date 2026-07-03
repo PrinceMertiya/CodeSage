@@ -5,6 +5,8 @@ const { detectProject } = require("../services/projectDetectorService");
 
 const { generateChunks } = require("../services/chunkGeneratorService");
 
+const { buildRepositoryGraph } = require("../services/repositoryGraphService");
+
 const analyzeRepository = async (req, res) => {
 
     const { repositoryUrl } = req.body;
@@ -41,6 +43,8 @@ const analyzeRepository = async (req, res) => {
 
         const chunks = generateChunks(fileContents);
 
+        const repositoryGraph = buildRepositoryGraph(fileContents);
+
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -63,7 +67,9 @@ const analyzeRepository = async (req, res) => {
                 file => file.language === "JavaScript"
             ),
 
-            chunks
+            chunks,
+
+            repositoryGraph
             
 
         });
