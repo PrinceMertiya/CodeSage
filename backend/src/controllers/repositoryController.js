@@ -48,6 +48,8 @@ const analyzeRepository = async (req, res) => {
         // Detect project information
         const project = detectProject(fileContents);
 
+        console.log(JSON.stringify(repositoryGraph, null, 2));
+
         return res.status(200).json({
 
             success: true,
@@ -70,6 +72,8 @@ const analyzeRepository = async (req, res) => {
             chunks,
 
             repositoryGraph
+
+            
             
 
         });
@@ -84,6 +88,8 @@ const analyzeRepository = async (req, res) => {
         });
 
     }
+
+    
 
 };
 

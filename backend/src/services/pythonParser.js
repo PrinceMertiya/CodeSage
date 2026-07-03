@@ -43,7 +43,11 @@ const parsePython = (content) => {
             .split(",")
             .map(item => item.trim());
 
-        result.imports.push(...modules);
+        // result.imports.push(...modules);
+
+        result.imports.push(
+    match[1].split(" as ")[0].trim()
+);
 
     }
 
@@ -105,7 +109,7 @@ for (let i = 0; i < lines.length; i++) {
 
         currentClass = {
 
-    id,
+    // id,
 
     name,
 
@@ -181,7 +185,7 @@ for (let i = 0; i < lines.length; i++) {
 
             result.functions.push({
 
-                id: `function_${result.functions.length + 1}`,
+                // id: `function_${result.functions.length + 1}`,
 
                 name: functionName,
 

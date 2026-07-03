@@ -3,17 +3,15 @@ const path = require("path");
 const buildRepositoryGraph = (files) => {
 
     const graph = {
-
         nodes: [],
         edges: []
-
     };
 
     const fileLookup = {};
 
-    // ==========================
-    // Create Nodes
-    // ==========================
+    // ==========================================
+    // Create File + Function + Class Nodes
+    // ==========================================
 
     for (const file of files) {
 
@@ -21,9 +19,15 @@ const buildRepositoryGraph = (files) => {
 
         fileLookup[normalizedPath] = file;
 
+        // -------------------------
+        // File Node
+        // -------------------------
+
         graph.nodes.push({
 
             id: file.id,
+
+            type: "file",
 
             name: file.name,
 
@@ -33,29 +37,195 @@ const buildRepositoryGraph = (files) => {
 
         });
 
+        // -------------------------
+        // Function Nodes
+        // -------------------------
+
+        if (file.structure?.functions) {
+
+            for (const func of file.structure.functions) {
+
+                graph.nodes.push({
+
+                    // id: func.id,
+                    id: `${normalizedPath}:${func.name}`,
+
+                    type: "function",
+
+                    name: func.name,
+
+                    file: normalizedPath,
+
+                    startLine: func.startLine,
+
+                    endLine: func.endLine
+
+                });
+
+                graph.edges.push({
+
+                    from: file.id,
+
+                    to: func.id,
+
+                    to: `${normalizedPath}:${func.name}`,
+
+                    type: "contains"
+
+                });
+
+            }
+
+        }
+
+        // -------------------------
+        // Arrow Function Nodes
+        // -------------------------
+
+        if (file.structure?.arrowFunctions) {
+
+            for (const func of file.structure.arrowFunctions) {
+
+                graph.nodes.push({
+
+                    // id: func.id,
+
+                    id: `${normalizedPath}:${func.name}`,
+
+                    type: "arrow-function",
+
+                    name: func.name,
+
+                    file: normalizedPath,
+
+                    startLine: func.startLine,
+
+                    endLine: func.endLine
+
+                });
+
+                graph.edges.push({
+
+                    from: file.id,
+
+                    to: func.id,
+
+                    type: "contains"
+
+                });
+
+            }
+
+        }
+
+        // -------------------------
+        // Class Nodes
+        // -------------------------
+
+        if (file.structure?.classes) {
+
+            
+
+            for (const cls of file.structure.classes) {
+
+
+                const classId = `${normalizedPath}:${cls.name}`;
+
+                graph.nodes.push({
+
+                    // id: cls.id,
+
+                    id: `${normalizedPath}:${cls.name}`,
+
+                    type: "class",
+
+                    name: cls.name,
+
+                    file: normalizedPath,
+
+                    startLine: cls.startLine,
+
+                    endLine: cls.endLine
+
+                });
+
+                graph.edges.push({
+
+                    from: file.id,
+
+                    // to: cls.id,
+
+                    
+
+                    to: classId,
+
+                    type: "contains"
+
+                });
+
+                // -------------------------
+                // Method Nodes
+                // -------------------------
+
+                if (cls.methods) {
+
+                    for (const method of cls.methods) {
+
+                        // const methodId = `${cls.id}_${method}`;
+
+                        const classId = `${normalizedPath}:${cls.name}`;
+
+                        const methodId = `${classId}:${method}`;
+
+                        graph.nodes.push({
+
+                            id: methodId,
+
+                            type: "method",
+
+                            name: method,
+
+                            class: cls.name
+
+                        });
+
+                        graph.edges.push({
+
+                            from: cls.id,
+
+                            to: methodId,
+
+                            type: "has-method"
+
+                        });
+
+                    }
+
+                }
+
+            }
+
+        }
+
     }
 
-    // ==========================
-    // Create Import Relationships
-    // ==========================
+    // ==========================================
+    // Import Relationships
+    // ==========================================
 
     for (const file of files) {
 
-        if (!file.structure || !file.structure.imports) {
-            continue;
-        }
+        if (!file.structure?.imports) continue;
 
         const sourcePath = file.relativePath.replace(/\\/g, "/");
+
+        const sourceId = file.id;
 
         for (const imported of file.structure.imports) {
 
             let targetPath = null;
 
-            // ==========================
-            // Python
-            // utils.parser
-            // -> utils/parser.py
-            // ==========================
+            // Python imports
 
             if (file.language === "Python") {
 
@@ -64,11 +234,7 @@ const buildRepositoryGraph = (files) => {
 
             }
 
-            // ==========================
-            // JavaScript
-            // ./utils/db
-            // ../services/auth
-            // ==========================
+            // JavaScript imports
 
             else if (file.language === "JavaScript") {
 
@@ -88,21 +254,19 @@ const buildRepositoryGraph = (files) => {
 
             }
 
-            // ==========================
-            // Internal Import
-            // ==========================
+            // Internal File
 
-            const target = Object.keys(fileLookup).find(filePath =>
-                filePath.endsWith(targetPath)
+            const targetFile = Object.values(fileLookup).find(f =>
+                f.relativePath.replace(/\\/g, "/").endsWith(targetPath)
             );
 
-            if (target) {
+            if (targetFile) {
 
                 graph.edges.push({
 
-                    from: sourcePath,
+                    from: sourceId,
 
-                    to: target,
+                    to: targetFile.id,
 
                     type: "imports"
 
@@ -110,17 +274,35 @@ const buildRepositoryGraph = (files) => {
 
             }
 
-            // ==========================
             // External Library
-            // ==========================
 
             else {
 
+                const externalId = `lib_${imported}`;
+
+                const exists = graph.nodes.find(
+                    node => node.id === externalId
+                );
+
+                if (!exists) {
+
+                    graph.nodes.push({
+
+                        id: externalId,
+
+                        type: "library",
+
+                        name: imported
+
+                    });
+
+                }
+
                 graph.edges.push({
 
-                    from: sourcePath,
+                    from: sourceId,
 
-                    to: imported,
+                    to: externalId,
 
                     type: "external"
 

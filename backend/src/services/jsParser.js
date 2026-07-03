@@ -88,13 +88,19 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     while ((match = requireRegex.exec(content)) !== null) {
 
-        result.imports.push(match[1]);
+        // result.imports.push(match[1]);
+        result.imports.push(
+    match[1].split(" as ")[0].trim()
+);
 
     }
 
     while ((match = importRegex.exec(content)) !== null) {
 
-        result.imports.push(match[1]);
+        // result.imports.push(match[1]);
+        result.imports.push(
+    match[1].split(" as ")[0].trim()
+);
 
     }
 
@@ -145,7 +151,7 @@ const endLine = getLineNumber(
 
 result.functions.push({
 
-    id: `function_${result.functions.length + 1}`,
+    // id: `function_${result.functions.length + 1}`,
 
     name: functionName,
 
@@ -209,7 +215,7 @@ result.functions.push({
 
     result.arrowFunctions.push({
 
-        id: `arrow_${result.arrowFunctions.length + 1}`,
+        // id: `arrow_${result.arrowFunctions.length + 1}`,
 
         name: functionName,
 
@@ -281,7 +287,7 @@ while ((match = classRegex.exec(content)) !== null) {
 
     result.classes.push({
 
-        id: `class_${result.classes.length + 1}`,
+        // id: `class_${result.classes.length + 1}`,
 
         name: className,
 
