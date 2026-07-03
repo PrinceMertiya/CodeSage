@@ -1,4 +1,5 @@
 const { parseRequirements } = require("./pythonDependencyParser");
+const { projectTypeRules } = require("../utils/projectTypeRules");
 
 const detectProject = (files) => {
 
@@ -12,6 +13,9 @@ const detectProject = (files) => {
         projectType: "Unknown"
 
     };
+
+
+    
 
     for (const file of files) {
 
@@ -48,6 +52,20 @@ const detectProject = (files) => {
             project.packageManager = "Cargo";
         }
     }
+
+    for (const framework of project.framework) {
+
+    const key = framework.toLowerCase();
+
+    if (projectTypeRules[key]) {
+
+        project.projectType = projectTypeRules[key];
+
+        break;
+
+    }
+
+}
 
     return project;
 };

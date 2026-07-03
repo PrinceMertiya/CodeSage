@@ -1,7 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
 
-const { parseJavaScript } = require("./jsParser");
 const { detectLanguage } = require("../utils/languageDetector");
 const { detectStructure } = require("./structureDetectorService");
 
@@ -33,35 +32,10 @@ const readFiles = async (files, repositoryRoot) => {
 
         }
 
-//         let structure = null;
-
-//         if (language === "JavaScript") {
-
-//         //     structure = parseJavaScript(content);
-//         const structure = detectStructure(
-//     language,
-//     content
-// );
-let structure = null;
-
-if (language === "JavaScript") {
-
-        structure = detectStructure(
-        language,
-        content
-    );
-
-}
-
-        
-
-        
-        console.log({
-    name: path.basename(file),
-    language,
-    structure
-});
-
+        const structure = detectStructure(
+            language,
+            content
+        );
 
         results.push({
 
