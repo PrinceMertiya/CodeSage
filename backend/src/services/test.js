@@ -1,31 +1,21 @@
-const { parseJavaScript } = require("./jsParser");
+const { parsePython } = require("./pythonParser");
 
 const code = `
-const express = require("express");
+import fastapi
 
-function login(){}
+class UserService:
 
-const logout = () => {};
+    async def login(self):
+        pass
 
-class UserController {
+    def logout(self):
+        pass
 
-    register(){}
+async def fetch_users():
+    pass
 
-}
-
-module.exports = UserController;
-
-exports.login = login;
-
-export default UserController;
-
-export {
-
-    logout,
-
-    login
-
-};
+def main():
+    pass
 `;
 
-console.log(parseJavaScript(code));
+console.log(parsePython(code));

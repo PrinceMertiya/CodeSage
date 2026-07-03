@@ -174,11 +174,11 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     result.imports = [...new Set(result.imports)];
 
-result.functions = [...new Set(result.functions)];
+    result.functions = [...new Set(result.functions)];
 
-result.arrowFunctions = [...new Set(result.arrowFunctions)];
+    result.arrowFunctions = [...new Set(result.arrowFunctions)];
 
-result.exports = [...new Set(result.exports)];
+    result.exports = [...new Set(result.exports)];
 
     return result;
 
