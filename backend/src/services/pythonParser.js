@@ -183,10 +183,29 @@ const parsePython = (content) => {
         signatureEnd++;
     }
 
-    const bodyIndent =
-        signatureEnd + 1 < lines.length
-            ? lines[signatureEnd + 1].match(/^\s*/)[0].length
-            : 0;
+    // const bodyIndent =
+    //     signatureEnd + 1 < lines.length
+    //         ? lines[signatureEnd + 1].match(/^\s*/)[0].length
+    //         : 0;
+
+    let bodyIndent = null;
+
+for (let i = signatureEnd + 1; i < lines.length; i++) {
+
+    if (lines[i].trim() === "") continue;
+
+    bodyIndent =
+        lines[i].match(/^\s*/)[0].length;
+
+    break;
+
+}
+
+if (bodyIndent === null) {
+
+    bodyIndent = 0;
+
+}
 
     let endLine = lines.length;
 
