@@ -7,6 +7,11 @@ const { generateChunks } = require("../services/chunkGeneratorService");
 
 const { buildRepositoryGraph } = require("../services/repositoryGraphService");
 
+const { analyzeDependencies } = require("../services/dependencyAnalyzerService");
+const { buildFunctionLookup } = require("../services/functionLookupService");
+
+const { detectDeadCode } = require("../services/deadCodeService");
+
 const analyzeRepository = async (req, res) => {
 
     const { repositoryUrl } = req.body;
@@ -45,6 +50,14 @@ const analyzeRepository = async (req, res) => {
 
         const repositoryGraph = buildRepositoryGraph(fileContents);
 
+
+        const functionLookup = buildFunctionLookup(fileContents);
+
+const dependencies = analyzeDependencies(
+    fileContents,
+    functionLookup
+);
+
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -71,7 +84,9 @@ const analyzeRepository = async (req, res) => {
 
             chunks,
 
-            repositoryGraph
+            repositoryGraph,
+
+            dependencies
 
             
             

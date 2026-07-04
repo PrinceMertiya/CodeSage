@@ -2,11 +2,13 @@ const parseJavaScript = (content) => {
 
     const {
 
-    getLineNumber,
+        getLineNumber,
 
-    extractContent
+        extractContent
 
-} = require("./parserUtils");
+    } = require("./parserUtils");
+
+    const { parseTopLevelCalls } = require("./topLevelCallParser");
 
     console.log("JS Parser Executed");
 
@@ -16,7 +18,8 @@ const parseJavaScript = (content) => {
         classes: [],
         functions: [],
         arrowFunctions: [],
-        exports: []
+        exports: [],
+        topLevelCalls: []
 
     };
 
@@ -54,6 +57,9 @@ const parseJavaScript = (content) => {
     const exportNamedRegex =
         /export\s*\{\s*([^}]*)\s*\}/g;
 
+
+    const { parseFunctionCalls } = require("../parsers/callParser");
+
     let match;
 
     // ==========================
@@ -62,36 +68,36 @@ const parseJavaScript = (content) => {
 
     while ((match = moduleExportRegex.exec(content)) !== null) {
 
-    result.exports.push(match[1]);
+        result.exports.push(match[1]);
 
-}
-while ((match = exportsRegex.exec(content)) !== null) {
+    }
+    while ((match = exportsRegex.exec(content)) !== null) {
 
-    result.exports.push(match[1]);
+        result.exports.push(match[1]);
 
-}
-while ((match = exportDefaultRegex.exec(content)) !== null) {
+    }
+    while ((match = exportDefaultRegex.exec(content)) !== null) {
 
-    result.exports.push(match[1]);
+        result.exports.push(match[1]);
 
-}
-while ((match = exportNamedRegex.exec(content)) !== null) {
+    }
+    while ((match = exportNamedRegex.exec(content)) !== null) {
 
-    const exportsList = match[1]
-        .split(",")
-        .map(item => item.trim())
-        .filter(Boolean);
+        const exportsList = match[1]
+            .split(",")
+            .map(item => item.trim())
+            .filter(Boolean);
 
-    result.exports.push(...exportsList);
+        result.exports.push(...exportsList);
 
-}
+    }
 
     while ((match = requireRegex.exec(content)) !== null) {
 
         // result.imports.push(match[1]);
         result.imports.push(
-    match[1].split(" as ")[0].trim()
-);
+            match[1].split(" as ")[0].trim()
+        );
 
     }
 
@@ -99,8 +105,8 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
         // result.imports.push(match[1]);
         result.imports.push(
-    match[1].split(" as ")[0].trim()
-);
+            match[1].split(" as ")[0].trim()
+        );
 
     }
 
@@ -110,61 +116,71 @@ while ((match = exportNamedRegex.exec(content)) !== null) {
 
     while ((match = functionRegex.exec(content)) !== null) {
 
-    const startLine = getLineNumber(
-    content,
-    match.index
-);
+        const startLine = getLineNumber(
+            content,
+            match.index
+        );
 
-    const functionName = match[1];
+        const functionName = match[1];
 
-    const startIndex = functionRegex.lastIndex - 1;
+        const startIndex = functionRegex.lastIndex - 1;
 
-let braceCount = 1;
+        let braceCount = 1;
 
-let currentIndex = startIndex + 1;
+        let currentIndex = startIndex + 1;
 
-while (
-    currentIndex < content.length &&
-    braceCount > 0
-) {
+        while (
+            currentIndex < content.length &&
+            braceCount > 0
+        ) {
 
-    if (content[currentIndex] === "{") {
+            if (content[currentIndex] === "{") {
 
-        braceCount++;
+                braceCount++;
 
-    }
+            }
 
-    else if (content[currentIndex] === "}") {
+            else if (content[currentIndex] === "}") {
 
-        braceCount--;
+                braceCount--;
 
-    }
+            }
 
-    currentIndex++;
+            currentIndex++;
 
-}
+        }
 
-const endLine = getLineNumber(
-    content,
-    currentIndex
-);
+        const endLine = getLineNumber(
+            content,
+            currentIndex
+        );
 
-result.functions.push({
+        result.functions.push({
 
-    // id: `function_${result.functions.length + 1}`,
+            // id: `function_${result.functions.length + 1}`,
 
-    name: functionName,
+            name: functionName,
 
-    startLine,
+            startLine,
 
-    endLine,
-    content: extractContent(
-        content,
-        startLine,
-        endLine)
-    
+            endLine,
+            content: extractContent(
+                content,
+                startLine,
+                endLine)
 
-});
+            ,
+            calls: parseFunctionCalls(
+                extractContent(
+                    content,
+                    startLine,
+                    endLine
+                ),
+                "JavaScript"
+            )
+
+
+        });
 
     }
 
@@ -174,138 +190,160 @@ result.functions.push({
 
     while ((match = arrowFunctionRegex.exec(content)) !== null) {
 
-    const functionName = match[1];
+        const functionName = match[1];
 
-    const startLine = getLineNumber(
-        content,
-        match.index
-    );
+        const startLine = getLineNumber(
+            content,
+            match.index
+        );
 
-    const startIndex = arrowFunctionRegex.lastIndex - 1;
+        const startIndex = arrowFunctionRegex.lastIndex - 1;
 
-    let braceCount = 1;
+        let braceCount = 1;
 
-    let currentIndex = startIndex + 1;
+        let currentIndex = startIndex + 1;
 
-    while (
-        currentIndex < content.length &&
-        braceCount > 0
-    ) {
+        while (
+            currentIndex < content.length &&
+            braceCount > 0
+        ) {
 
-        if (content[currentIndex] === "{") {
+            if (content[currentIndex] === "{") {
 
-            braceCount++;
+                braceCount++;
+
+            }
+
+            else if (content[currentIndex] === "}") {
+
+                braceCount--;
+
+            }
+
+            currentIndex++;
 
         }
 
-        else if (content[currentIndex] === "}") {
+        const endLine = getLineNumber(
+            content,
+            currentIndex
+        );
 
-            braceCount--;
+        result.arrowFunctions.push({
 
-        }
+            // id: `arrow_${result.arrowFunctions.length + 1}`,
 
-        currentIndex++;
+            name: functionName,
+
+            startLine,
+
+            endLine,
+
+            content: extractContent(
+                content,
+                startLine,
+                endLine)
+
+            ,
+            calls: parseFunctionCalls(
+                extractContent(
+                    content,
+                    startLine,
+                    endLine
+                ),
+                "JavaScript"
+            )
+
+        });
 
     }
 
-    const endLine = getLineNumber(
-        content,
-        currentIndex
-    );
 
-    result.arrowFunctions.push({
+    while ((match = classRegex.exec(content)) !== null) {
 
-        // id: `arrow_${result.arrowFunctions.length + 1}`,
+        const className = match[1];
 
-        name: functionName,
+        const startIndex = classRegex.lastIndex - 1;
 
-        startLine,
+        let braceCount = 1;
 
-        endLine,
+        let currentIndex = startIndex + 1;
 
-        content: extractContent(
-        content,
-        startLine,
-        endLine)
+        while (
+            currentIndex < content.length &&
+            braceCount > 0
+        ) {
 
-    });
+            if (content[currentIndex] === "{") {
+                braceCount++;
+            }
+            else if (content[currentIndex] === "}") {
+                braceCount--;
+            }
 
-}
-
-
-while ((match = classRegex.exec(content)) !== null) {
-
-    const className = match[1];
-
-    const startIndex = classRegex.lastIndex - 1;
-
-    let braceCount = 1;
-
-    let currentIndex = startIndex + 1;
-
-    while (
-        currentIndex < content.length &&
-        braceCount > 0
-    ) {
-
-        if (content[currentIndex] === "{") {
-            braceCount++;
-        }
-        else if (content[currentIndex] === "}") {
-            braceCount--;
+            currentIndex++;
         }
 
-        currentIndex++;
+        const classBody = content.substring(
+            startIndex,
+            currentIndex
+        );
+
+        const methods = [];
+
+        let methodMatch;
+
+        while (
+            (methodMatch = methodRegex.exec(classBody)) !== null
+        ) {
+
+            methods.push(methodMatch[1]);
+
+        }
+
+        const startLine = getLineNumber(
+            content,
+            match.index
+        );
+
+        const endLine = getLineNumber(
+            content,
+            currentIndex
+        );
+
+        result.classes.push({
+
+            // id: `class_${result.classes.length + 1}`,
+
+            name: className,
+
+            startLine,
+
+            endLine,
+
+            content: extractContent(
+                content,
+                startLine,
+                endLine),
+
+
+
+            calls: parseFunctionCalls(
+                extractContent(
+                    content,
+                    startLine,
+                    endLine
+                ),
+                "JavaScript"
+            ),
+
+            methods
+
+
+        });
+
     }
 
-    const classBody = content.substring(
-        startIndex,
-        currentIndex
-    );
-
-    const methods = [];
-
-    let methodMatch;
-
-    while (
-        (methodMatch = methodRegex.exec(classBody)) !== null
-    ) {
-
-        methods.push(methodMatch[1]);
-
-    }
-
-    const startLine = getLineNumber(
-        content,
-        match.index
-    );
-
-    const endLine = getLineNumber(
-        content,
-        currentIndex
-    );
-
-    result.classes.push({
-
-        // id: `class_${result.classes.length + 1}`,
-
-        name: className,
-
-        startLine,
-
-        endLine,
-
-        content: extractContent(
-        content,
-        startLine,
-        endLine),
-
-        methods
-
-    });
-
-}
-    
 
     result.imports = [...new Set(result.imports)];
 
@@ -315,7 +353,11 @@ while ((match = classRegex.exec(content)) !== null) {
 
     result.exports = [...new Set(result.exports)];
 
+    result.topLevelCalls =
+    parseTopLevelCalls(content, "JavaScript");
+
     return result;
+    
 
 };
 

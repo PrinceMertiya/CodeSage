@@ -1,21 +1,12 @@
-const { parsePython } = require("./pythonParser");
+const { parseFunctionCalls } = require("../parsers/callParser");
 
-const code = `
-import fastapi
-
-class UserService:
-
-    async def login(self):
-        pass
-
-    def logout(self):
-        pass
-
-async def fetch_users():
-    pass
-
-def main():
-    pass
-`;
-
-console.log(parsePython(code));
+console.log(
+    parseFunctionCalls(
+        `
+        load_model();
+        calculate_similarity();
+        helper();
+        `,
+        "Python"
+    )
+);

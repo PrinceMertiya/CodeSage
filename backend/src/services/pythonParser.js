@@ -1,20 +1,32 @@
 const parsePython = (content) => {
 
+    const { parseTopLevelCalls } = require("./topLevelCallParser");
+
     const result = {
 
         imports: [],
         classes: [],
-        functions: []
+        functions: [],
+        topLevelCalls: []
 
     };
 
+    //     const {
+
+    //     getLineNumber,
+
+    //     extractContent
+
+    // } = require("./parserUtils");
+
     const {
+        getLineNumber,
+        extractContent
+    } = require("./parserUtils");
 
-    getLineNumber,
 
-    extractContent
 
-} = require("./parserUtils");
+
 
     const importRegex =
         /^import\s+(.+)$/gm;
@@ -34,6 +46,8 @@ const parsePython = (content) => {
     const functionRegex =
         /^(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/gm;
 
+    const { parseFunctionCalls } = require("../parsers/callParser");
+
     let match;
 
     // import streamlit
@@ -46,8 +60,8 @@ const parsePython = (content) => {
         // result.imports.push(...modules);
 
         result.imports.push(
-    match[1].split(" as ")[0].trim()
-);
+            match[1].split(" as ")[0].trim()
+        );
 
     }
 
@@ -61,59 +75,57 @@ const parsePython = (content) => {
 
     const lines = content.split("\n");
 
-let currentClass = null;
+    let currentClass = null;
 
-for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; i++) {
 
-    const line = lines[i];
+        const line = lines[i];
 
-    // Leaving the class
-    if (
-        currentClass &&
-        line.trim() !== "" &&
-        /^\S/.test(line)
-    ) {
-        currentClass = null;
-    }
-
-    const classMatch = line.match(
-        /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)[^\n]*:/
-    );
-
-    if (classMatch) {
-
-        const classIndent = line.match(/^\s*/)[0].length;
-
-        let endLine = i + 1;
-
-        for (let j = i + 1; j < lines.length; j++) {
-
-            const nextLine = lines[j];
-
-            if (nextLine.trim() === "") {
-                continue;
-            }
-
-            const indent = nextLine.match(/^\s*/)[0].length;
-
-            if (indent <= classIndent) {
-
-                endLine = j;
-
-                break;
-
-            }
-
-            endLine = j + 1;
+        // Leaving the class
+        if (
+            currentClass &&
+            line.trim() !== "" &&
+            /^\S/.test(line)
+        ) {
+            currentClass = null;
         }
 
-        currentClass = {
+        const classMatch = line.match(
+            /^class\s+([a-zA-Z_][a-zA-Z0-9_]*)[^\n]*:/
+        );
 
-    // id,
+        if (classMatch) {
 
-    name,
+            const classIndent = line.match(/^\s*/)[0].length;
 
-    startLine,
+            let endLine = i + 1;
+
+            for (let j = i + 1; j < lines.length; j++) {
+
+                const nextLine = lines[j];
+
+                if (nextLine.trim() === "") {
+                    continue;
+                }
+
+                const indent = nextLine.match(/^\s*/)[0].length;
+
+                if (indent <= classIndent) {
+
+                    endLine = j;
+
+                    break;
+
+                }
+
+                endLine = j + 1;
+            }
+
+            currentClass = {
+
+    name: classMatch[1],
+
+    startLine: i + 1,
 
     endLine,
 
@@ -123,25 +135,26 @@ for (let i = 0; i < lines.length; i++) {
         endLine
     ),
 
-        methods
+    methods: []
+
+};
+
+            result.classes.push(currentClass);
+
+            continue;
         }
 
-        result.classes.push(currentClass);
+        const methodMatch = line.match(
+            /^\s{4}(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
+        );
 
-        continue;
-    }
+        if (methodMatch && currentClass) {
 
-    const methodMatch = line.match(
-        /^\s{4}(?:async\s+)?def\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/
-    );
+            currentClass.methods.push(methodMatch[1]);
 
-    if (methodMatch && currentClass) {
-
-        currentClass.methods.push(methodMatch[1]);
+        }
 
     }
-
-}
 
 
     while ((match = functionRegex.exec(content)) !== null) {
@@ -185,8 +198,6 @@ for (let i = 0; i < lines.length; i++) {
 
             result.functions.push({
 
-                // id: `function_${result.functions.length + 1}`,
-
                 name: functionName,
 
                 startLine,
@@ -194,10 +205,19 @@ for (let i = 0; i < lines.length; i++) {
                 endLine,
 
                 content: extractContent(
-        content,
-        startLine,
-        endLine
-    )
+                    content,
+                    startLine,
+                    endLine
+                ),
+
+                calls: parseFunctionCalls(
+                    extractContent(
+                        content,
+                        startLine,
+                        endLine
+                    ),
+                    "Python"
+                )
 
             });
 
@@ -207,6 +227,9 @@ for (let i = 0; i < lines.length; i++) {
 
     result.imports = [...new Set(result.imports)];
     // result.functions = [...new Set(result.functions)];
+
+    result.topLevelCalls =
+    parseTopLevelCalls(content, "Python");
 
     return result;
 

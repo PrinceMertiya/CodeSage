@@ -1,5 +1,9 @@
 const path = require("path");
 
+const { buildFunctionLookup } = require("./functionLookupService");
+
+const { buildCallGraph } = require("./callGraphService");
+
 const buildRepositoryGraph = (files) => {
 
     const graph = {
@@ -7,6 +11,7 @@ const buildRepositoryGraph = (files) => {
         edges: []
     };
 
+    const functionLookup = buildFunctionLookup(files);
     const fileLookup = {};
 
     // ==========================================
@@ -64,15 +69,13 @@ const buildRepositoryGraph = (files) => {
 
                 graph.edges.push({
 
-                    from: file.id,
+    from: file.id,
 
-                    to: func.id,
+    to: `${normalizedPath}:${func.name}`,
 
-                    to: `${normalizedPath}:${func.name}`,
+    type: "contains"
 
-                    type: "contains"
-
-                });
+});
 
             }
 
@@ -106,13 +109,13 @@ const buildRepositoryGraph = (files) => {
 
                 graph.edges.push({
 
-                    from: file.id,
+    from: file.id,
 
-                    to: func.id,
+    to: `${normalizedPath}:${func.name}`,
 
-                    type: "contains"
+    type: "contains"
 
-                });
+});
 
             }
 
@@ -124,7 +127,7 @@ const buildRepositoryGraph = (files) => {
 
         if (file.structure?.classes) {
 
-            
+
 
             for (const cls of file.structure.classes) {
 
@@ -155,7 +158,7 @@ const buildRepositoryGraph = (files) => {
 
                     // to: cls.id,
 
-                    
+
 
                     to: classId,
 
@@ -191,13 +194,13 @@ const buildRepositoryGraph = (files) => {
 
                         graph.edges.push({
 
-                            from: cls.id,
+    from: classId,
 
-                            to: methodId,
+    to: methodId,
 
-                            type: "has-method"
+    type: "has-method"
 
-                        });
+});
 
                     }
 
@@ -208,6 +211,133 @@ const buildRepositoryGraph = (files) => {
         }
 
     }
+//     // ==========================================
+// // Function Call Relationships
+// // ==========================================
+
+// for (const file of files) {
+
+//     if (!file.structure) continue;
+
+//     const allFunctions = [
+
+//         ...(file.structure.functions || []),
+
+//         ...(file.structure.arrowFunctions || [])
+
+//     ];
+
+//     for (const func of allFunctions) {
+
+//         if (!func.calls) continue;
+
+//         const fromId =
+//             `${file.relativePath.replace(/\\/g, "/")}:${func.name}`;
+
+//         for (const call of func.calls) {
+
+//             const target = functionLookup[call];
+
+//             if (!target) continue;
+
+//             const toId =
+//                 `${target.file.relativePath.replace(/\\/g, "/")}:${target.function.name}`;
+
+//             graph.edges.push({
+
+//                 from: fromId,
+
+//                 to: toId,
+
+//                 type: "calls"
+
+//             });
+
+//         }
+
+//     }
+
+// }
+//     // ==========================================
+//     // Function Call Relationships
+//     // ==========================================
+
+//     for (const file of files) {
+
+//         if (!file.structure) continue;
+
+//         const allFunctions = [
+
+//             ...(file.structure.functions || []),
+
+//             ...(file.structure.arrowFunctions || [])
+
+//         ];
+
+//         for (const func of allFunctions) {
+
+//             if (!func.calls) continue;
+
+//             const fromId =
+//                 `${file.relativePath.replace(/\\/g, "/")}:${func.name}`;
+
+//             for (const call of func.calls) {
+
+//                 const target = functionLookup[call];
+
+//                 if (!target) continue;
+
+//                 const toId =
+//                     `${target.file.relativePath.replace(/\\/g, "/")}:${target.function.name}`;
+
+//                 graph.edges.push({
+
+//                     from: fromId,
+
+//                     to: toId,
+
+//                     type: "calls"
+
+//                 });
+
+//             }
+
+//         }
+
+//     }
+
+    // ==========================================
+// Top Level Call Relationships
+// ==========================================
+
+for (const file of files) {
+
+    if (!file.structure?.topLevelCalls) continue;
+
+    const fromId = file.id;
+
+    for (const call of file.structure.topLevelCalls) {
+
+        const target = functionLookup[call];
+
+        if (!target) continue;
+
+        const toId =
+            `${target.file.relativePath.replace(/\\/g, "/")}:${target.function.name}`;
+
+        graph.edges.push({
+
+            from: fromId,
+
+            to: toId,
+
+            type: "calls"
+
+        });
+
+    }
+
+}
 
     // ==========================================
     // Import Relationships
@@ -313,6 +443,12 @@ const buildRepositoryGraph = (files) => {
         }
 
     }
+
+    buildCallGraph(
+    graph,
+    files,
+    functionLookup
+);
 
     return graph;
 
