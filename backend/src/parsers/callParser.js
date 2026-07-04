@@ -18,6 +18,47 @@ const parseFunctionCalls = (content, language) => {
 
     }
 
+    const ignored = new Set([
+
+        // Python keywords
+        "if",
+        "for",
+        "while",
+        "return",
+        "def",
+        "class",
+        "import",
+
+        // Common built-ins
+        "print",
+        "open",
+        "len",
+        "set",
+        "list",
+        "dict",
+        "tuple",
+        "str",
+        "int",
+        "float",
+        "round",
+        "range",
+        "enumerate",
+        "zip",
+
+        // Common string methods
+        "split",
+        "join",
+        "strip",
+        "lower",
+        "upper",
+        "append",
+        "extend",
+        "insert",
+        "remove",
+        "pop"
+
+    ]);
+
     const calls = [];
 
     let match;
@@ -26,18 +67,31 @@ const parseFunctionCalls = (content, language) => {
 
         const name = match[1];
 
+        // Ignore function definitions
         const before = content.substring(
-            Math.max(0, match.index - 10),
+            Math.max(0, match.index - 20),
             match.index
         );
 
-        // Ignore declarations
-
         if (
-            before.includes("def ") ||
-            before.includes("function ") ||
-            before.includes("class ")
+            /\bdef\s+$/.test(before) ||
+            /\basync\s+def\s+$/.test(before) ||
+            /\bfunction\s+$/.test(before) ||
+            /\bclass\s+$/.test(before)
         ) {
+            continue;
+        }
+
+        // Ignore object.method()
+        if (
+            match.index > 0 &&
+            content[match.index - 1] === "."
+        ) {
+            continue;
+        }
+
+        // Ignore built-ins
+        if (ignored.has(name)) {
             continue;
         }
 

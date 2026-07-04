@@ -12,6 +12,38 @@ const { buildFunctionLookup } = require("../services/functionLookupService");
 
 const { detectDeadCode } = require("../services/deadCodeService");
 
+const {
+    detectCircularDependencies
+} = require("../services/circularDependencyService");
+
+const {
+    buildExecutionTree
+} = require("../services/flowBuilderService");
+
+const {
+
+    generateRepositoryDiagram,
+
+    generateFunctionDiagram,
+
+    generateExecutionDiagram,
+
+    generateArchitectureDiagram
+
+} = require("../services/mermaidService");
+
+const {
+    generateExecutionFlow
+} = require("../services/executionFlowService");
+
+const {
+    detectEntryPoint
+} = require("../services/entryPointDetectorService");
+
+
+
+
+
 const analyzeRepository = async (req, res) => {
 
     const { repositoryUrl } = req.body;
@@ -50,15 +82,49 @@ const analyzeRepository = async (req, res) => {
 
         const repositoryGraph = buildRepositoryGraph(fileContents);
 
+        const entryPoint =
+            detectEntryPoint(fileContents);
+
+        const executionTree =
+            buildExecutionTree(
+                repositoryGraph,
+                entryPoint // use detected entry point as start node
+            );
+
+
+        const repositoryDiagram =
+            generateRepositoryDiagram(repositoryGraph);
+
+        const functionDiagram =
+            generateFunctionDiagram(repositoryGraph);
+
+        const executionDiagram =
+            generateExecutionDiagram(executionTree);
+
+        const architectureDiagram =
+            generateArchitectureDiagram(repositoryGraph);
+
+
+        const circularDependencies =
+            detectCircularDependencies(
+                repositoryGraph
+            );
+
+        const executionFlow =
+            generateExecutionFlow(repositoryGraph);
+
+        //     const executionFlow =
+        // generateExecutionFlow(repositoryGraph);    
+
 
         const functionLookup = buildFunctionLookup(fileContents);
 
-const dependencies = analyzeDependencies(
-    fileContents,
-    functionLookup
-);
+        const dependencies = analyzeDependencies(
+            fileContents,
+            functionLookup
+        );
 
-    const deadCode = detectDeadCode(fileContents);
+        const deadCode = detectDeadCode(fileContents);
 
         // Detect project information
         const project = detectProject(fileContents);
@@ -76,7 +142,7 @@ const dependencies = analyzeDependencies(
             project,
 
             totalFiles: fileContents.length,
-            
+
 
             // files: fileContents
 
@@ -88,14 +154,28 @@ const dependencies = analyzeDependencies(
 
             repositoryGraph,
 
+            executionTree,
+
             dependencies,
 
-            deadCode
+            deadCode,
+
+            circularDependencies,
+
+            executionFlow,
+
+            repositoryDiagram,
+
+            functionDiagram,
+
+            executionDiagram,
+
+            architectureDiagram,
 
 
 
-            
-            
+
+
 
         });
 
@@ -110,7 +190,7 @@ const dependencies = analyzeDependencies(
 
     }
 
-    
+
 
 };
 

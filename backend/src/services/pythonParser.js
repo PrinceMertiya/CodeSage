@@ -159,69 +159,91 @@ const parsePython = (content) => {
 
     while ((match = functionRegex.exec(content)) !== null) {
 
-        const startLine = getLineNumber(
-            content,
-            match.index
-        );
+    const startLine = getLineNumber(
+        content,
+        match.index
+    );
 
+    const functionName = match[1];
 
-        const functionName = match[1];
+    const isMethod = result.classes.some(cls =>
+        cls.methods.includes(functionName)
+    );
 
-        const isMethod = result.classes.some(cls =>
-            cls.methods.includes(functionName)
-        );
+    // ---------------------------------
+    // Find where the function signature ends
+    // ---------------------------------
 
+    let signatureEnd = startLine - 1;
 
-        let endLine = startLine;
+    while (
+        signatureEnd < lines.length &&
+        !lines[signatureEnd].trim().endsWith(":")
+    ) {
+        signatureEnd++;
+    }
 
-        const currentIndent = lines[startLine - 1].match(/^\s*/)[0].length;
+    const bodyIndent =
+        signatureEnd + 1 < lines.length
+            ? lines[signatureEnd + 1].match(/^\s*/)[0].length
+            : 0;
 
-        for (let i = startLine; i < lines.length; i++) {
+    let endLine = lines.length;
 
-            const line = lines[i];
+    // ---------------------------------
+    // Find end of function body
+    // ---------------------------------
 
-            if (line.trim() === "") {
-                continue;
-            }
+    for (let i = signatureEnd + 1; i < lines.length; i++) {
 
-            const indent = line.match(/^\s*/)[0].length;
+        const line = lines[i];
 
-            if (indent <= currentIndent) {
-                endLine = i;
-                break;
-            }
-
-            endLine = i + 1;
+        if (line.trim() === "") {
+            continue;
         }
 
-        if (!isMethod) {
+        const indent =
+            line.match(/^\s*/)[0].length;
 
-            result.functions.push({
+        if (indent < bodyIndent) {
 
-                name: functionName,
+            endLine = i;
+            break;
 
+        }
+
+    }
+
+    if (!isMethod) {
+
+        const functionContent =
+            extractContent(
+                content,
                 startLine,
+                endLine
+            );
 
-                endLine,
+        result.functions.push({
 
-                content: extractContent(
-                    content,
-                    startLine,
-                    endLine
-                ),
+            name: functionName,
 
-                calls: parseFunctionCalls(
-                    extractContent(
-                        content,
-                        startLine,
-                        endLine
-                    ),
-                    "Python"
-                )
+            startLine,
 
-            });
+            endLine,
 
-        }
+            content: functionContent,
+
+            calls: parseFunctionCalls(
+                functionContent,
+                "Python"
+            )
+
+        });
+
+    }
+
+
+
 
     }
 
