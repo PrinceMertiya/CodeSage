@@ -58,6 +58,8 @@ const dependencies = analyzeDependencies(
     functionLookup
 );
 
+    const deadCode = detectDeadCode(fileContents);
+
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -86,7 +88,11 @@ const dependencies = analyzeDependencies(
 
             repositoryGraph,
 
-            dependencies
+            dependencies,
+
+            deadCode
+
+
 
             
             
