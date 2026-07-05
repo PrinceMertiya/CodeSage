@@ -17,8 +17,19 @@ const {
 } = require("../services/repositoryMetricsService");
 
 const {
+    generateRepositoryDiagram,
+    generateFunctionDiagram,
+    generateExecutionDiagram,
+    generateArchitectureDiagram
+} = require("../services/mermaidService");
+
+const {
     detectCircularDependencies
 } = require("../services/circularDependencyService");
+
+const {
+    generateSemanticChunks
+} = require("../services/semanticChunkService");
 
 const {
     buildExecutionTree
@@ -128,6 +139,22 @@ const analyzeRepository = async (req, res) => {
 
         const deadCode = detectDeadCode(fileContents);
 
+        const repositoryMetrics =
+    generateRepositoryMetrics(
+
+        fileContents,
+
+        repositoryGraph,
+
+        deadCode,
+
+        circularDependencies
+
+    );
+
+
+        
+
 
         const repositorySummary =
     generateRepositorySummary(
@@ -145,21 +172,21 @@ const analyzeRepository = async (req, res) => {
         circularDependencies
 
     );
-
-
-        const repositoryMetrics =
-    generateRepositoryMetrics(
+    const semanticChunks =
+    generateSemanticChunks(
 
         fileContents,
 
         repositoryGraph,
 
-        deadCode,
+        executionFlow,
 
-        circularDependencies
+        repositorySummary
 
     );
 
+
+        
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -210,7 +237,9 @@ const analyzeRepository = async (req, res) => {
 
             repositoryMetrics,
 
-            repositorySummary
+            repositorySummary,
+
+            semanticChunks
 
 
 
