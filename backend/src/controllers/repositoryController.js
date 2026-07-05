@@ -21,6 +21,10 @@ const {
 } = require("../services/flowBuilderService");
 
 const {
+    exportGraph
+} = require("../services/graphExportService");
+
+const {
 
     generateRepositoryDiagram,
 
@@ -81,6 +85,9 @@ const analyzeRepository = async (req, res) => {
         const chunks = generateChunks(fileContents);
 
         const repositoryGraph = buildRepositoryGraph(fileContents);
+
+        const graphJson =
+    exportGraph(repositoryGraph);
 
         const entryPoint =
             detectEntryPoint(fileContents);
@@ -153,6 +160,8 @@ const analyzeRepository = async (req, res) => {
             chunks,
 
             repositoryGraph,
+
+            graphJson,
 
             executionTree,
 

@@ -4,12 +4,12 @@ const parseFunctionCalls = (content, language) => {
 
     if (language === "Python") {
 
-        callRegex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g;
+        callRegex = /([a-zA-Z_][a-zA-Z0-9_\.]*)\s*\(/g;
 
     }
     else if (language === "JavaScript") {
 
-        callRegex = /\b([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g;
+        callRegex = /([a-zA-Z_$][a-zA-Z0-9_$\.]*)\s*\(/g;
 
     }
     else {
@@ -20,42 +20,14 @@ const parseFunctionCalls = (content, language) => {
 
     const ignored = new Set([
 
-        // Python keywords
         "if",
         "for",
         "while",
         "return",
         "def",
         "class",
-        "import",
-
-        // Common built-ins
-        "print",
-        "open",
-        "len",
-        "set",
-        "list",
-        "dict",
-        "tuple",
-        "str",
-        "int",
-        "float",
-        "round",
-        "range",
-        "enumerate",
-        "zip",
-
-        // Common string methods
-        "split",
-        "join",
-        "strip",
-        "lower",
-        "upper",
-        "append",
-        "extend",
-        "insert",
-        "remove",
-        "pop"
+        "function",
+        "import"
 
     ]);
 
@@ -65,14 +37,14 @@ const parseFunctionCalls = (content, language) => {
 
     while ((match = callRegex.exec(content)) !== null) {
 
-        const name = match[1];
+        const fullName = match[1];
 
-        // Ignore function definitions
         const before = content.substring(
             Math.max(0, match.index - 20),
             match.index
         );
 
+        // Ignore function definitions
         if (
             /\bdef\s+$/.test(before) ||
             /\basync\s+def\s+$/.test(before) ||
@@ -82,27 +54,43 @@ const parseFunctionCalls = (content, language) => {
             continue;
         }
 
-        // Ignore object.method()
-        if (
-            match.index > 0 &&
-            content[match.index - 1] === "."
-        ) {
-            continue;
-        }
+        const parts = fullName.split(".");
 
-        // Ignore built-ins
-        if (ignored.has(name)) {
-            continue;
-        }
+        if (parts.length === 1) {
 
-        calls.push(name);
+            if (!ignored.has(parts[0])) {
+
+                calls.push({
+
+                    name: parts[0],
+
+                    object: null
+
+                });
+
+            }
+
+        }
+        else {
+
+            calls.push({
+
+                object: parts.slice(0, -1).join("."),
+
+                name: parts[parts.length - 1]
+
+            });
+
+        }
 
     }
 
-    return [...new Set(calls)];
+    return calls;
 
 };
 
 module.exports = {
+
     parseFunctionCalls
+
 };

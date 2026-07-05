@@ -1,3 +1,6 @@
+const {
+    resolveSymbol
+} = require("./symbolResolverService");
 const buildCallGraph = (
     graph,
     files,
@@ -28,28 +31,40 @@ const buildCallGraph = (
 
             for (const call of func.calls) {
 
-                const target = functionLookup[call];
+    // Ignore external object calls
+    if (call.object) {
+        continue;
+    }
 
-                if (!target) continue;
+    const target =
+    resolveSymbol(
+        file,
+        call.name,
+        files,
+        functionLookup
+    );
 
-                const targetPath =
-                    target.file.relativePath.replace(/\\/g, "/");
+    if (!target) {
+        continue;
+    }
 
-                const toId =
-                    `${targetPath}:${target.function.name}`;
+    const targetPath =
+        target.file.relativePath.replace(/\\/g, "/");
 
-                graph.edges.push({
+    const toId =
+        `${targetPath}:${target.function.name}`;
 
-                    from: fromId,
+    graph.edges.push({
 
-                    to: toId,
+        from: fromId,
 
-                    type: "calls"
+        to: toId,
 
-                });
+        type: "calls"
 
-            }
+    });
 
+}
         }
 
     }
