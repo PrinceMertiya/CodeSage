@@ -13,6 +13,10 @@ const { buildFunctionLookup } = require("../services/functionLookupService");
 const { detectDeadCode } = require("../services/deadCodeService");
 
 const {
+    generateRepositoryMetrics
+} = require("../services/repositoryMetricsService");
+
+const {
     detectCircularDependencies
 } = require("../services/circularDependencyService");
 
@@ -24,17 +28,11 @@ const {
     exportGraph
 } = require("../services/graphExportService");
 
+
+
 const {
-
-    generateRepositoryDiagram,
-
-    generateFunctionDiagram,
-
-    generateExecutionDiagram,
-
-    generateArchitectureDiagram
-
-} = require("../services/mermaidService");
+    generateRepositorySummary
+} = require("../services/repositorySummaryService");
 
 const {
     generateExecutionFlow
@@ -43,9 +41,6 @@ const {
 const {
     detectEntryPoint
 } = require("../services/entryPointDetectorService");
-
-
-
 
 
 const analyzeRepository = async (req, res) => {
@@ -133,6 +128,38 @@ const analyzeRepository = async (req, res) => {
 
         const deadCode = detectDeadCode(fileContents);
 
+
+        const repositorySummary =
+    generateRepositorySummary(
+
+        repositoryPath,
+
+        fileContents,
+
+        repositoryMetrics,
+
+        entryPoint,
+
+        deadCode,
+
+        circularDependencies
+
+    );
+
+
+        const repositoryMetrics =
+    generateRepositoryMetrics(
+
+        fileContents,
+
+        repositoryGraph,
+
+        deadCode,
+
+        circularDependencies
+
+    );
+
         // Detect project information
         const project = detectProject(fileContents);
 
@@ -181,7 +208,9 @@ const analyzeRepository = async (req, res) => {
 
             architectureDiagram,
 
+            repositoryMetrics,
 
+            repositorySummary
 
 
 
