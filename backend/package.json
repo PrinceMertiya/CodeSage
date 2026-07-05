@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^2.10.0",
+    "@qdrant/js-client-rest": "^1.18.0",
     "express": "^5.2.1",
     "simple-git": "^3.36.0"
   },
