@@ -2,6 +2,9 @@ const {
     buildFunctionMetadata
 } = require("./functionMetadataService");
 
+
+const { v4: uuid } = require("uuid");
+
 const generateSemanticChunks = (
     files,
     repositoryGraph,
@@ -17,7 +20,9 @@ const generateSemanticChunks = (
 
     chunks.push({
 
-        id: "repository-summary",
+        id: uuid(),
+
+        originalId: "repository-summary",
 
         type: "repository-summary",
 
@@ -67,8 +72,12 @@ const generateSemanticChunks = (
 
             chunks.push({
 
-                id:
-                    `function:${normalizedPath}:${func.name}`,
+                // id:
+                //     `function:${normalizedPath}:${func.name}`,
+
+                id: uuid(),
+
+                originalId: `function:${normalizedPath}:${func.name}`,
 
                 type: "function",
 
@@ -107,8 +116,9 @@ const generateSemanticChunks = (
 
             chunks.push({
 
-                id:
-                    `class:${normalizedPath}:${cls.name}`,
+                id: uuid(),
+
+                originalId: `class:${normalizedPath}:${cls.name}`,
 
                 type: "class",
 
@@ -139,7 +149,9 @@ const generateSemanticChunks = (
 
     chunks.push({
 
-        id: "execution-flow",
+        id: uuid(),
+
+        originalId: "execution-flow",
 
         type: "execution-flow",
 
@@ -166,7 +178,9 @@ const generateSemanticChunks = (
 
     chunks.push({
 
-        id: "architecture",
+        id: uuid(),
+
+        originalId: "architecture",
 
         type: "architecture",
 

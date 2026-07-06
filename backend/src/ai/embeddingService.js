@@ -1,4 +1,8 @@
 const { getProvider } = require("./providerFactory");
+const {
+    createCollection,
+    upsertChunks
+} = require("./vectorStoreService");
 
 const buildEmbeddingText = (chunk) => {
 
@@ -19,7 +23,7 @@ ${chunk.content}
 };
 
 
-const generateEmbeddings = async (semanticChunks) => {
+const generateEmbeddings = async (repositoryId, semanticChunks) => {
 
     const provider = getProvider();
 
@@ -59,14 +63,32 @@ const generateEmbeddings = async (semanticChunks) => {
 
     }
 
+    // if (embeddedChunks.length > 0) {
+
+    //     console.log(
+    //         "Embedding Dimension:",
+    //         embeddedChunks[0].embedding.length
+    //     );
+
+    // }
+
     if (embeddedChunks.length > 0) {
 
-        console.log(
-            "Embedding Dimension:",
-            embeddedChunks[0].embedding.length
-        );
+    await createCollection(
 
-    }
+        embeddedChunks[0].embedding.length
+
+    );
+
+    await upsertChunks(
+
+        repositoryId,
+
+        embeddedChunks
+
+    );
+
+}
 
     return embeddedChunks;
 

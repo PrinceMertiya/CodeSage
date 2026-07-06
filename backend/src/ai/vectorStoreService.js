@@ -1,88 +1,98 @@
 const { QdrantClient } = require("@qdrant/js-client-rest");
-
 const config = require("../config/vectorConfig");
 
 const client = new QdrantClient({
-
     url: config.qdrant.url
-
 });
 
-const createCollection = async () => {
+// Create collection if it doesn't exist
+const createCollection = async (vectorSize) => {
 
     try {
 
+        const collections =
+            await client.getCollections();
+
+        const exists =
+            collections.collections.some(
+                c => c.name === config.qdrant.collection
+            );
+
+        if (exists) {
+            console.log("✅ Collection already exists");
+            return;
+        }
+
         await client.createCollection(
-
             config.qdrant.collection,
-
             {
-
                 vectors: {
-
-                    size: 768,
-
+                    size: vectorSize,
                     distance: "Cosine"
-
                 }
-
             }
-
         );
+
+        console.log("✅ Collection created");
 
     } catch (error) {
 
-        console.log("Collection already exists");
+        console.error(error);
+
+        throw error;
 
     }
 
 };
 
+// Store vectors
 const upsertChunks = async (
     repositoryId,
     embeddedChunks
 ) => {
 
-    const points = embeddedChunks.map(chunk => ({
+    const points =
+        embeddedChunks.map(chunk => ({
 
-        id: chunk.id,
+            id: chunk.id,
 
-        vector: chunk.embedding,
+            vector: chunk.embedding,
 
-        payload: {
+            payload: {
 
-            repositoryId,
+                repositoryId,
 
-            type: chunk.type,
+                originalId: chunk.originalId,
 
-            title: chunk.title,
+                type: chunk.type,
 
-            file: chunk.file,
+                title: chunk.title,
 
-            metadata: chunk.metadata,
+                file: chunk.file,
 
-            content: chunk.content
+                metadata: chunk.metadata,
 
-        }
+                content: chunk.content
 
-    }));
+            }
+
+        }));
 
     await client.upsert(
-
         config.qdrant.collection,
-
         {
-
             wait: true,
-
             points
-
         }
+    );
 
+    console.log(
+        `✅ Stored ${points.length} vectors`
     );
 
 };
 
+// Vector Search
 const searchSimilar = async (
     repositoryId,
     embedding,
@@ -90,9 +100,7 @@ const searchSimilar = async (
 ) => {
 
     return await client.search(
-
         config.qdrant.collection,
-
         {
 
             vector: embedding,
@@ -120,16 +128,52 @@ const searchSimilar = async (
             }
 
         }
-
     );
 
 };
+
+// Delete Repository
+const deleteRepository = async (
+    repositoryId
+) => {
+
+    await client.delete(
+        config.qdrant.collection,
+        {
+
+            filter: {
+
+                must: [
+
+                    {
+
+                        key: "repositoryId",
+
+                        match: {
+
+                            value: repositoryId
+
+                        }
+
+                    }
+
+                ]
+
+            }
+
+        }
+    );
+
+};
+
 module.exports = {
 
     createCollection,
 
     upsertChunks,
 
-    searchSimilar
+    searchSimilar,
+
+    deleteRepository
 
 };
