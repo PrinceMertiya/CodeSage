@@ -1,12 +1,18 @@
-const { parseFunctionCalls } = require("../parsers/callParser");
+require("dotenv").config({
+    path: require("path").join(__dirname, "../../.env")
+});
 
-console.log(
-    parseFunctionCalls(
-        `
-        load_model();
-        calculate_similarity();
-        helper();
-        `,
-        "Python"
-    )
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+const genAI = new GoogleGenerativeAI(
+    process.env.GEMINI_API_KEY
 );
+
+async function main() {
+
+    console.log("API Key Loaded:",
+        !!process.env.GEMINI_API_KEY);
+
+}
+
+main();

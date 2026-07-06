@@ -1,7 +1,9 @@
-const GeminiProvider = require("./providers/GeminiProvider");
-const OpenAIProvider = require("./providers/OpenAIProvider");
+const GeminiProvider = require("./GeminiProvider");
+const OpenAIProvider = require("./OpenAIProvider");
 
-const config = require("../config/aiConfig");
+// const config = require("../../config/aiConfig");
+
+const config = require("../../config/aiConfig");
 
 const getProvider = () => {
 

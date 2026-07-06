@@ -1,4 +1,4 @@
-const { getProvider } = require("./providerFactory");
+const { getProvider } = require("./providers/providerFactory");
 
 // This will later call vectorStoreService
 const retrieveContext = async (

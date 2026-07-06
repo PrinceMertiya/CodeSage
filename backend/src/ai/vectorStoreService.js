@@ -2,7 +2,8 @@ const { QdrantClient } = require("@qdrant/js-client-rest");
 const config = require("../config/vectorConfig");
 
 const client = new QdrantClient({
-    url: config.qdrant.url
+    url: config.qdrant.url,
+    checkCompatibility: false
 });
 
 // Create collection if it doesn't exist

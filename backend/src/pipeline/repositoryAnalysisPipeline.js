@@ -37,14 +37,6 @@ const {
 
 } = require("../ai/embeddingService");
 
-const embeddedChunks =
-    await generateEmbeddings(
-
-        repositoryPath,
-
-        semanticChunks
-
-    );
 
 const {
     buildExecutionTree
@@ -199,6 +191,16 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
                 repositorySummary
 
             );
+
+            
+const embeddedChunks =
+    await generateEmbeddings(
+
+        repositoryPath,
+
+        semanticChunks
+
+    );
 
             console.log(
     "========== FIRST CHUNK =========="

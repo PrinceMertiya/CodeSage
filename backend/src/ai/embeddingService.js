@@ -1,4 +1,4 @@
-const { getProvider } = require("./providerFactory");
+const { getProvider } = require("./providers/providerFactory");
 const {
     createCollection,
     upsertChunks
@@ -63,14 +63,14 @@ const generateEmbeddings = async (repositoryId, semanticChunks) => {
 
     }
 
-    // if (embeddedChunks.length > 0) {
+    if (embeddedChunks.length > 0) {
 
-    //     console.log(
-    //         "Embedding Dimension:",
-    //         embeddedChunks[0].embedding.length
-    //     );
+        console.log(
+            "Embedding Dimension:",
+            embeddedChunks[0].embedding.length
+        );
 
-    // }
+    }
 
     if (embeddedChunks.length > 0) {
 
