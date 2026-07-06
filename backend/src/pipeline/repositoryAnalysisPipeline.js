@@ -207,7 +207,7 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
         const embeddedChunks =
             await generateEmbeddings(
 
-                repositoryPath,
+                repository.id,
 
                 semanticChunks
 
