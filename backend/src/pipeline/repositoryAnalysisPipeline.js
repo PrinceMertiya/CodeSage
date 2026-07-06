@@ -37,6 +37,10 @@ const {
 
 } = require("../ai/embeddingService");
 
+const {
+    saveRepository
+} = require("../services/repositoryStorageService");
+
 
 const {
     buildExecutionTree
@@ -137,6 +141,8 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
         // generateExecutionFlow(repositoryGraph);    
 
 
+
+
         const functionLookup = buildFunctionLookup(fileContents);
 
         const dependencies = analyzeDependencies(
@@ -192,35 +198,50 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
 
             );
 
-            console.log(
-    "PIPELINE:",
-    process.env.GEMINI_API_KEY
-);
-const embeddedChunks =
-    await generateEmbeddings(
 
-        repositoryPath,
 
-        semanticChunks
+        console.log(
+            "PIPELINE:",
+            process.env.GEMINI_API_KEY
+        );
+        const embeddedChunks =
+            await generateEmbeddings(
 
-    );
+                repositoryPath,
 
-    console.log(
-    "Pipeline API Key:",
-    process.env.GEMINI_API_KEY
-);
+                semanticChunks
 
-            console.log(
-    "========== FIRST CHUNK =========="
-);
+            );
 
-console.log(
-    semanticChunks[0]
-);
+        const repository =
+            await saveRepository({
 
-console.log(
-    "================================="
-);
+                repositoryUrl,
+
+                repositorySummary,
+
+                repositoryMetrics,
+
+                executionFlow
+
+            });
+
+        console.log(
+            "Pipeline API Key:",
+            process.env.GEMINI_API_KEY
+        );
+
+        console.log(
+            "========== FIRST CHUNK =========="
+        );
+
+        console.log(
+            semanticChunks[0]
+        );
+
+        console.log(
+            "================================="
+        );
 
 
         // Detect project information
@@ -229,6 +250,8 @@ console.log(
         console.log(JSON.stringify(repositoryGraph, null, 2));
 
         return {
+
+            repositoryId: repository.id,
 
             repositoryPath,
 
@@ -269,7 +292,7 @@ console.log(
             repositorySummary,
 
             semanticChunks,
-            
+
             embeddedChunks
 
         };
