@@ -1,27 +1,49 @@
-const { getProvider } = require("./providers/providerFactory");
-
-// This will later call vectorStoreService
-const retrieveContext = async (
-    repositoryId,
-    question
+const buildContext = (
+    repositorySummary,
+    executionFlow,
+    retrievedChunks
 ) => {
 
-    const provider = getProvider();
+    let context = "";
 
-    // Generate embedding for the user's question
-    const embedding =
-        await provider.generateEmbedding(question);
+    context +=
+`Repository Summary
 
-    // TODO:
-    // Search Qdrant using this embedding
+${JSON.stringify(repositorySummary,null,2)}
 
-    return {
-        question,
-        embedding
-    };
+`;
+
+    context +=
+`Execution Flow
+
+${JSON.stringify(executionFlow,null,2)}
+
+`;
+
+    context +=
+"Relevant Semantic Chunks\n\n";
+
+    for(const chunk of retrievedChunks){
+
+        context +=
+`File: ${chunk.payload.file}
+
+Type: ${chunk.payload.type}
+
+Title: ${chunk.payload.title}
+
+${chunk.payload.content}
+
+-----------------------------------
+
+`;
+
+    }
+
+    return context;
 
 };
 
 module.exports = {
-    retrieveContext
+    buildContext
 };

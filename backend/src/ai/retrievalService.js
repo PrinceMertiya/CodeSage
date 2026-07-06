@@ -1,6 +1,9 @@
-const { getProvider } = require("./providerFactory");
+const { getProvider } = require("./providers/providerFactory");
 
-// This will later call vectorStoreService
+const {
+    searchSimilar
+} = require("./vectorStoreService");
+
 const retrieveContext = async (
     repositoryId,
     question
@@ -8,17 +11,17 @@ const retrieveContext = async (
 
     const provider = getProvider();
 
-    // Generate embedding for the user's question
     const embedding =
         await provider.generateEmbedding(question);
 
-    // TODO:
-    // Search Qdrant using this embedding
+    const results =
+        await searchSimilar(
+            repositoryId,
+            embedding,
+            8
+        );
 
-    return {
-        question,
-        embedding
-    };
+    return results;
 
 };
 

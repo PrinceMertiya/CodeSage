@@ -1,4 +1,4 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenAI } = require("@google/genai");
 const AIProvider = require("./AIProvider");
 const config = require("../../config/aiConfig");
 
@@ -7,40 +7,42 @@ class GeminiProvider extends AIProvider {
     constructor() {
         super();
 
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error("GEMINI_API_KEY is missing");
-        }
-
-        this.genAI = new GoogleGenerativeAI(
-            process.env.GEMINI_API_KEY
-        );
+        this.ai = new GoogleGenAI({
+            apiKey: process.env.GEMINI_API_KEY
+        });
     }
 
     async generateEmbedding(text) {
 
-        const model = this.genAI.getGenerativeModel({
-            model: config.models.gemini.embedding
-        });
+        const response =
+            await this.ai.models.embedContent({
 
-        const result = await model.embedContent(text);
+                model: config.models.gemini.embedding,
 
-        return result.embedding.values;
+                contents: text
+
+            });
+
+        return response.embeddings[0].values;
 
     }
 
     async chat(messages) {
 
-        const model = this.genAI.getGenerativeModel({
-            model: config.models.gemini.chat
-        });
-
         const prompt = messages
             .map(m => `${m.role}: ${m.content}`)
             .join("\n");
 
-        const result = await model.generateContent(prompt);
+        const response =
+            await this.ai.models.generateContent({
 
-        return result.response.text();
+                model: config.models.gemini.chat,
+
+                contents: prompt
+
+            });
+
+        return response.text;
 
     }
 

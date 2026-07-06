@@ -12,7 +12,7 @@ const {
 
 const {
     getProvider
-} = require("./providerFactory");
+} = require("./providers/providerFactory");
 
 const askRepository = async (
     repositoryId,
@@ -27,12 +27,7 @@ const askRepository = async (
             question
         );
 
-    const context =
-        buildContext(
-            repositorySummary,
-            executionFlow,
-            []
-        );
+    z
 
     const prompt =
         buildPrompt(

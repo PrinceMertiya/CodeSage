@@ -1,14 +1,17 @@
-const express = require('express');
+const express = require("express");
 
-// const healthRoutes = require('./routes/healthRoutes');
 const repositoryRoutes =
-require("./routes/repositoryRoutes");
+    require("./routes/repositoryRoutes");
+
+const repositoryChatRoutes =
+    require("./routes/repositoryChatRoutes");
 
 const app = express();
 
 app.use(express.json());
+
 app.use("/repository", repositoryRoutes);
-// app.use('/health', healthRoutes);
+
+app.use("/repository/chat", repositoryChatRoutes);
 
 module.exports = app;
-

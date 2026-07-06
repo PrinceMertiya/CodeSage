@@ -1,25 +1,35 @@
 const buildPrompt = (
     context,
     question
-) => {
+)=>{
 
-    return `
+return `
 You are CodeSage,
-an AI software architect.
+an AI Software Architect.
 
-Use ONLY the provided context.
+Rules:
 
-Context:
+- Answer ONLY from repository context.
+- Mention file names.
+- Mention function names.
+- Explain execution flow.
+- Never hallucinate.
+- If the answer doesn't exist,
+say so.
+
+Repository Context
 
 ${context}
 
-Question:
+User Question
 
 ${question}
+
+Answer:
 `;
 
 };
 
-module.exports = {
+module.exports={
     buildPrompt
 };

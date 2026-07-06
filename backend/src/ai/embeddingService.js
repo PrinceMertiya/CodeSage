@@ -4,6 +4,11 @@ const {
     upsertChunks
 } = require("./vectorStoreService");
 
+// console.log(
+//     "EMBEDDING:",
+//     process.env.GEMINI_API_KEY
+// );
+
 const buildEmbeddingText = (chunk) => {
 
     return `

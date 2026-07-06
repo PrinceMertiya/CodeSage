@@ -192,7 +192,10 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
 
             );
 
-            
+            console.log(
+    "PIPELINE:",
+    process.env.GEMINI_API_KEY
+);
 const embeddedChunks =
     await generateEmbeddings(
 
@@ -201,6 +204,11 @@ const embeddedChunks =
         semanticChunks
 
     );
+
+    console.log(
+    "Pipeline API Key:",
+    process.env.GEMINI_API_KEY
+);
 
             console.log(
     "========== FIRST CHUNK =========="
