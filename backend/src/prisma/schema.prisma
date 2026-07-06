@@ -6,32 +6,43 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model Repository {
 
-  id              String   @id @default(cuid())
+  id                  String   @id @default(cuid())
 
-  repositoryUrl   String   @unique
+  repositoryUrl       String   @unique
 
-  projectName     String
+  projectName         String
 
-  projectType     String?
+  projectType         String?
 
-  architecture    String?
+  architecture        String?
 
-  frameworks      Json?
+  frameworks          Json?
 
-  metrics         Json?
+  summary             Json?
 
-  summary         Json?
+  metrics             Json?
 
-  executionFlow   Json?
+  executionFlow       Json?
 
-  createdAt       DateTime @default(now())
+  project             Json?
 
-  updatedAt       DateTime @updatedAt
+  repositoryGraph     Json?
 
-  chats           ChatHistory[]
+  repositoryDiagram   String?
+
+  functionDiagram     String?
+
+  executionDiagram    String?
+
+  architectureDiagram String?
+
+  createdAt           DateTime @default(now())
+
+  updatedAt           DateTime @updatedAt
+
+  chats               ChatHistory[]
 
 }
 

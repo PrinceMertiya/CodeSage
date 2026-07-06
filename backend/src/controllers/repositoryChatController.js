@@ -9,8 +9,8 @@ const repositoryChat = async (req, res) => {
         const {
 
             repositoryId,
-            repositorySummary,
-            executionFlow,
+            // repositorySummary,
+            // executionFlow,
             question
 
         } = req.body;

@@ -204,27 +204,52 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
             "PIPELINE:",
             process.env.GEMINI_API_KEY
         );
-        const embeddedChunks =
-            await generateEmbeddings(
+        // const embeddedChunks =
+        //     await generateEmbeddings(
 
-                repository.id,
+        //         repository.id,
 
-                semanticChunks
+        //         semanticChunks
 
-            );
+        //     );
+        const project =
+    detectProject(fileContents);
 
-        const repository =
-            await saveRepository({
+const repository =
+    await saveRepository({
 
-                repositoryUrl,
+        repositoryUrl,
 
-                repositorySummary,
+        project,
 
-                repositoryMetrics,
+        repositorySummary,
 
-                executionFlow
+        repositoryMetrics,
 
-            });
+        executionFlow,
+
+        repositoryGraph,
+
+        repositoryDiagram,
+
+        functionDiagram,
+
+        executionDiagram,
+
+        architectureDiagram
+
+    });
+
+const embeddedChunks =
+    await generateEmbeddings(
+
+        repository.id,
+
+        semanticChunks
+
+    );
+
+       
 
         console.log(
             "Pipeline API Key:",
@@ -244,8 +269,8 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
         );
 
 
-        // Detect project information
-        const project = detectProject(fileContents);
+        // // Detect project information
+        // const project = detectProject(fileContents);
 
         console.log(JSON.stringify(repositoryGraph, null, 2));
 

@@ -14,20 +14,51 @@ const {
     getProvider
 } = require("./providers/providerFactory");
 
+const {
+    getRepository
+} = require("../services/repositoryStorageService");
+
 const askRepository = async (
     repositoryId,
-    repositorySummary,
-    executionFlow,
+    // repositorySummary,
+    // executionFlow,
     question
 ) => {
 
-    const retrieval =
-        await retrieveContext(
-            repositoryId,
-            question
-        );
+   
 
-    z
+    const repository =
+    await getRepository(
+        repositoryId
+    );
+
+if (!repository) {
+
+    throw new Error(
+        "Repository not found"
+    );
+
+}
+
+const retrievedChunks =
+    await retrieveContext(
+
+        repositoryId,
+
+        question
+
+    );
+
+    const context =
+    buildContext(
+
+        repository.summary,
+
+        repository.executionFlow,
+
+        retrievedChunks
+
+    );
 
     const prompt =
         buildPrompt(
