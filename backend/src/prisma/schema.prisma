@@ -6,58 +6,73 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model Repository {
 
-  id                  String   @id @default(cuid())
+  id            String @id @default(cuid())
 
-  repositoryUrl       String   @unique
+  repositoryUrl String @unique
 
-  projectName         String
+  projectName   String
 
-  projectType         String?
+  projectType   String?
 
-  architecture        String?
+  createdAt     DateTime @default(now())
 
-  frameworks          Json?
+  updatedAt     DateTime @updatedAt
 
-  summary             Json?
+  analyses      Analysis[]
 
-  metrics             Json?
+}
 
-  executionFlow       Json?
+model Analysis {
 
-  project             Json?
+  id                    String @id @default(cuid())
 
-  repositoryGraph     Json?
+  repositoryId          String
 
-  repositoryDiagram   String?
+  summary               Json?
 
-  functionDiagram     String?
+  metrics               Json?
 
-  executionDiagram    String?
+  executionFlow         Json?
 
-  architectureDiagram String?
+  repositoryGraph       Json?
 
-  createdAt           DateTime @default(now())
+  project               Json?
 
-  updatedAt           DateTime @updatedAt
+  architecture          String?
 
-  chats               ChatHistory[]
+  frameworks            Json?
+
+  repositoryDiagram     String?
+
+  functionDiagram       String?
+
+  executionDiagram      String?
+
+  architectureDiagram   String?
+
+  createdAt             DateTime @default(now())
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  chats                 ChatHistory[]
 
 }
 
 model ChatHistory {
 
-  id              String   @id @default(cuid())
+  id            String @id @default(cuid())
 
-  repositoryId    String
+  analysisId    String
 
-  question        String
+  question      String
 
-  answer          String
+  answer        String
 
-  createdAt       DateTime @default(now())
+  createdAt     DateTime @default(now())
 
-  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
 }
