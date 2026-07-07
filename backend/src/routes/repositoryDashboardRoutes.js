@@ -11,6 +11,24 @@ const {
     validate
 } = require("../middlewares/validation");
 
+/**
+ * @swagger
+ * /repositories/{id}/dashboard:
+ *   get:
+ *     summary: Repository Dashboard
+ *     tags:
+ *       - Dashboard
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Dashboard information
+ */
+
 router.get(
     "/:id/dashboard",
     validateRepositoryId,

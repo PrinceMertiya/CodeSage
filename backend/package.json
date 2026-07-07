@@ -19,6 +19,8 @@
     "express-validator": "^7.3.2",
     "prisma": "^6.19.3",
     "simple-git": "^3.36.0",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "uuid": "^14.0.1"
   },
   "devDependencies": {

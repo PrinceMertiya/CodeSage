@@ -10,6 +10,9 @@ const {
     buildPrompt
 } = require("./promptBuilderService");
 
+const { ApiError } = require("../utils/ApiError");
+
+
 const {
     getProvider
 } = require("./providers/providerFactory");
@@ -40,7 +43,9 @@ const askRepository = async (
 
 if (!repository) {
 
-    throw new Error(
+    throw new ApiError(
+
+        404,
         "Repository not found"
     );
 

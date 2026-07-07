@@ -1,5 +1,8 @@
 const prisma = require("../config/database");
 
+const { ApiError } = require("../utils/ApiError");
+
+
 const getDashboard = async (repositoryId) => {
 
     const repository =
@@ -31,7 +34,10 @@ const getDashboard = async (repositoryId) => {
 
     if (!repository) {
 
-        throw new Error(
+        throw new ApiError(
+
+            404,
+
             "Repository not found"
         );
 

@@ -11,6 +11,8 @@ const {
     repositoryAnalysisPipeline
 } = require("../pipeline/repositoryAnalysisPipeline");
 
+const { ApiError } = require("../utils/ApiError");
+
 const {
 
     getChatHistory
@@ -33,9 +35,15 @@ const getRepositoryChats = async (repositoryId) => {
 
     if (!repository) {
 
-        throw new Error("Repository not found");
+    throw new ApiError(
 
-    }
+        404,
+
+        "Repository not found"
+
+    );
+
+}
 
     return await getChatHistory(repositoryId);
 
@@ -100,9 +108,15 @@ const deleteRepositoryById = async (repositoryId) => {
 
     if (!repository) {
 
-        throw new Error("Repository not found");
+    throw new ApiError(
 
-    }
+        404,
+
+        "Repository not found"
+
+    );
+
+}
 
     // Delete vectors from Qdrant
     await deleteRepository(repositoryId);
@@ -130,8 +144,16 @@ const reanalyzeRepository = async (repositoryId) => {
         await getRepository(repositoryId);
 
     if (!repository) {
-        throw new Error("Repository not found");
-    }
+
+    throw new ApiError(
+
+        404,
+
+        "Repository not found"
+
+    );
+
+}
 
     // Remove old vectors
     await deleteRepository(repositoryId);
