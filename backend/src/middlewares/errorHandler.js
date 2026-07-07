@@ -12,11 +12,15 @@ const errorHandler = (
 
     console.error(err);
 
-    res.status(err.status || 500).json({
+    const status =
+        err.status || 500;
+
+    return res.status(status).json({
 
         success: false,
 
-        message: err.message || "Internal Server Error"
+        message:
+            err.message || "Internal Server Error"
 
     });
 

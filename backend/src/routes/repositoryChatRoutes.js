@@ -6,8 +6,15 @@ const {
     repositoryChat
 } = require("../controllers/repositoryChatController");
 
+const {
+    validateChat,
+    validate
+} = require("../middlewares/validation");
+
 router.post(
     "/",
+    validateChat,
+    validate,
     repositoryChat
 );
 

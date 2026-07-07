@@ -2,7 +2,7 @@ const {
     repositoryAnalysisPipeline
 } = require("../pipeline/repositoryAnalysisPipeline");
 
-const analyzeRepository = async (req, res) => {
+const analyzeRepository = async (req, res, next) => {
 
     const { repositoryUrl } = req.body;
 
@@ -33,12 +33,14 @@ const analyzeRepository = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        // return res.status(500).json({
+        //     success: false,
+        //     message: error.message
+        // });
+
+        next(error);
     }
 };
 

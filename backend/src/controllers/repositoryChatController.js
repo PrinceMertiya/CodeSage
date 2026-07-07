@@ -2,7 +2,7 @@ const {
     askRepository
 } = require("../ai/aiChatService");
 
-const repositoryChat = async (req, res) => {
+const repositoryChat = async (req, res, next) => {
 
     try {
 
@@ -45,15 +45,17 @@ const repositoryChat = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 

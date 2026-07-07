@@ -12,7 +12,7 @@ const {
 
 } = require("../services/repositoryCrudService");
 
-const getAllRepositories = async (req, res) => {
+const getAllRepositories = async (req, res,next) => {
 
     try {
 
@@ -29,21 +29,23 @@ const getAllRepositories = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 
 };
 
-const getRepository = async (req, res) => {
+const getRepository = async (req, res , next) => {
 
     try {
 
@@ -74,20 +76,22 @@ const getRepository = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 
 };
-const deleteRepository = async (req, res) => {
+const deleteRepository = async (req, res, next) => {
 
     try {
 
@@ -107,21 +111,23 @@ const deleteRepository = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 
 };
 
-const reanalyze = async (req, res) => {
+const reanalyze = async (req, res ,next) => {
 
     try {
 
@@ -138,21 +144,23 @@ const reanalyze = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 
 };
 
-const getChats = async (req, res) => {
+const getChats = async (req, res, next) => {
 
     try {
 
@@ -171,15 +179,17 @@ const getChats = async (req, res) => {
 
     } catch (error) {
 
-        console.error(error);
+        // console.error(error);
 
-        return res.status(500).json({
+        // return res.status(500).json({
 
-            success: false,
+        //     success: false,
 
-            message: error.message
+        //     message: error.message
 
-        });
+        // });
+
+        next(error);
 
     }
 

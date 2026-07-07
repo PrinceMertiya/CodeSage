@@ -1,17 +1,25 @@
-const { body, param, validationResult } = require("express-validator");
+const {
+    body,
+    param,
+    validationResult
+} = require("express-validator");
 
+// Analyze Repository
 const validateRepository = [
 
     body("repositoryUrl")
         .notEmpty()
         .withMessage("Repository URL is required")
+
         .isURL()
-        .withMessage("Invalid URL")
-        .matches(/^https:\/\/github\.com\//)
+        .withMessage("Invalid Repository URL")
+
+        .matches(/^https:\/\/github\.com\/[^/]+\/[^/]+/)
         .withMessage("Only GitHub repositories are supported")
 
 ];
 
+// Chat
 const validateChat = [
 
     body("repositoryId")
@@ -21,11 +29,13 @@ const validateChat = [
     body("question")
         .notEmpty()
         .withMessage("Question is required")
+
         .isLength({ min: 3 })
-        .withMessage("Question is too short")
+        .withMessage("Question must contain at least 3 characters")
 
 ];
 
+// Repository ID
 const validateRepositoryId = [
 
     param("id")
@@ -34,9 +44,11 @@ const validateRepositoryId = [
 
 ];
 
+// Validation Result
 const validate = (req, res, next) => {
 
-    const errors = validationResult(req);
+    const errors =
+        validationResult(req);
 
     if (!errors.isEmpty()) {
 

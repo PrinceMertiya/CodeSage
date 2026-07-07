@@ -16,29 +16,50 @@ const {
 
 } = require("../controllers/repositoryCrudController");
 
-router.get("/", getAllRepositories);
+const {
 
-router.get("/:id", getRepository);
+    validateRepositoryId,
 
-router.delete(
+    validate
 
-    "/:id",
+} = require("../middlewares/validation");
 
-    deleteRepository
-
+// Get All
+router.get(
+    "/",
+    getAllRepositories
 );
 
+// Get One
+router.get(
+    "/:id",
+    validateRepositoryId,
+    validate,
+    getRepository
+);
+
+// Delete
+router.delete(
+    "/:id",
+    validateRepositoryId,
+    validate,
+    deleteRepository
+);
+
+// Chat History
 router.get(
     "/:id/chats",
+    validateRepositoryId,
+    validate,
     getChats
-)
+);
 
+// Reanalyze
 router.post(
-
     "/:id/reanalyze",
-
+    validateRepositoryId,
+    validate,
     reanalyze
-
 );
 
 module.exports = router;

@@ -6,20 +6,20 @@ const repositoryRoutes =
 const repositoryChatRoutes =
     require("./routes/repositoryChatRoutes");
 
-    const repositoryCrudRoutes =
+const repositoryCrudRoutes =
     require("./routes/repositoryCrudRoutes");
 
-    const errorHandler =
-require("./middlewares/errorHandler");
+const errorHandler =
+    require("./middlewares/errorHandler");
 
 const app = express();
 
 app.use(express.json());
 
-app.use(errorHandler);
+
 
 const repositoryDashboardRoutes =
-require("./routes/repositoryDashboardRoutes");
+    require("./routes/repositoryDashboardRoutes");
 
 app.use(
 
@@ -37,5 +37,7 @@ app.use(
 );
 
 app.use("/repository/chat", repositoryChatRoutes);
+
+app.use(errorHandler);
 
 module.exports = app;

@@ -6,6 +6,16 @@ const {
     analyzeRepository
 } = require("../controllers/repositoryController");
 
-router.post("/analyze", analyzeRepository);
+const {
+    validateRepository,
+    validate
+} = require("../middlewares/validation");
+
+router.post(
+    "/analyze",
+    validateRepository,
+    validate,
+    analyzeRepository
+);
 
 module.exports = router;
