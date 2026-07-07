@@ -18,6 +18,12 @@ const {
     getRepository
 } = require("../services/repositoryStorageService");
 
+const {
+
+    saveChatHistory
+
+} = require("../services/chatHistoryService");
+
 const askRepository = async (
     repositoryId,
     // repositorySummary,
@@ -69,18 +75,43 @@ const retrievedChunks =
     const provider =
         getProvider();
 
-    const answer =
-        await provider.chat([
-            {
-                role: "user",
-                content: prompt
-            }
-        ]);
+   const answer =
+    await provider.chat([
+        {
+            role: "user",
+            content: prompt
+        }
+    ]);
 
-    return answer;
+const sources =
+    retrievedChunks.map(chunk => ({
+
+        file: chunk.payload.file,
+
+        title: chunk.payload.title,
+
+        type: chunk.payload.type
+
+    }));
+
+await saveChatHistory(
+
+    repositoryId,
+
+    question,
+
+    answer
+
+);
+
+return {
+
+    answer,
+
+    sources
 
 };
-
+}
 module.exports = {
     askRepository
 };

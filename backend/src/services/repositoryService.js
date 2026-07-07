@@ -3,6 +3,7 @@ const path = require("path");
 
 const git = simpleGit();
 
+const fs = require("fs");
 const cloneRepository = async (repositoryUrl) => {
 
     const repoName = repositoryUrl
@@ -19,7 +20,29 @@ const cloneRepository = async (repositoryUrl) => {
     console.log("Cloning Repository...");
     console.log("Repository:", repoName);
 
-    await git.clone(repositoryUrl, destination);
+    // await git.clone(repositoryUrl, destination);
+
+    if (fs.existsSync(destination)) {
+
+    console.log("Removing old repository...");
+
+    fs.rmSync(destination, {
+
+        recursive: true,
+
+        force: true
+
+    });
+
+}
+
+await git.clone(
+
+    repositoryUrl,
+
+    destination
+
+);
 
     console.log("Clone Completed!");
 

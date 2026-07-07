@@ -9,8 +9,7 @@ const repositoryChat = async (req, res) => {
         const {
 
             repositoryId,
-            // repositorySummary,
-            // executionFlow,
+
             question
 
         } = req.body;
@@ -20,6 +19,7 @@ const repositoryChat = async (req, res) => {
             return res.status(400).json({
 
                 success: false,
+
                 message: "repositoryId and question are required"
 
             });
@@ -30,8 +30,7 @@ const repositoryChat = async (req, res) => {
             await askRepository(
 
                 repositoryId,
-                repositorySummary,
-                executionFlow,
+
                 question
 
             );
@@ -39,6 +38,7 @@ const repositoryChat = async (req, res) => {
         return res.json({
 
             success: true,
+
             ...result
 
         });
@@ -50,6 +50,7 @@ const repositoryChat = async (req, res) => {
         return res.status(500).json({
 
             success: false,
+
             message: error.message
 
         });

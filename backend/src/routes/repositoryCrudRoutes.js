@@ -8,7 +8,11 @@ const {
 
     getRepository,
 
-    deleteRepository
+    deleteRepository,
+
+    reanalyze,
+
+    getChats
 
 } = require("../controllers/repositoryCrudController");
 
@@ -21,6 +25,19 @@ router.delete(
     "/:id",
 
     deleteRepository
+
+);
+
+router.get(
+    "/:id/chats",
+    getChats
+)
+
+router.post(
+
+    "/:id/reanalyze",
+
+    reanalyze
 
 );
 

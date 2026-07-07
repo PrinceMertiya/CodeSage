@@ -1,41 +1,25 @@
 const {
-
     getDashboard
-
 } = require("../services/repositoryDashboardService");
 
 const dashboard = async (req, res) => {
 
     try {
 
-        const repository =
+        const data =
             await getDashboard(
                 req.params.id
             );
-
-        if (!repository) {
-
-            return res.status(404).json({
-
-                success: false,
-
-                message: "Repository not found"
-
-            });
-
-        }
 
         return res.json({
 
             success: true,
 
-            repository
+            ...data
 
         });
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
