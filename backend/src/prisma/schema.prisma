@@ -8,71 +8,53 @@ datasource db {
 }
 
 model Repository {
-
-  id            String @id @default(cuid())
+  id String @id @default(cuid())
 
   repositoryUrl String @unique
 
-  projectName   String
+  projectName String
 
-  projectType   String?
+  projectType String?
 
-  createdAt     DateTime @default(now())
+  architecture String?
 
-  updatedAt     DateTime @updatedAt
+  frameworks Json?
 
-  analyses      Analysis[]
+  metrics Json?
 
-}
+  summary Json?
 
-model Analysis {
+  executionFlow Json?
 
-  id                    String @id @default(cuid())
+  project Json?
 
-  repositoryId          String
+  repositoryGraph Json?
 
-  summary               Json?
+  repositoryDiagram String?
 
-  metrics               Json?
+  functionDiagram String?
 
-  executionFlow         Json?
+  executionDiagram String?
 
-  repositoryGraph       Json?
+  architectureDiagram String?
 
-  project               Json?
+  createdAt DateTime @default(now())
 
-  architecture          String?
+  updatedAt DateTime @updatedAt
 
-  frameworks            Json?
-
-  repositoryDiagram     String?
-
-  functionDiagram       String?
-
-  executionDiagram      String?
-
-  architectureDiagram   String?
-
-  createdAt             DateTime @default(now())
-
-  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-
-  chats                 ChatHistory[]
-
+  chats ChatHistory[]
 }
 
 model ChatHistory {
+  id String @id @default(cuid())
 
-  id            String @id @default(cuid())
+  repositoryId String
 
-  analysisId    String
+  question String
 
-  question      String
+  answer String
 
-  answer        String
+  createdAt DateTime @default(now())
 
-  createdAt     DateTime @default(now())
-
-  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
 }

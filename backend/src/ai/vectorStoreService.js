@@ -134,36 +134,38 @@ const searchSimilar = async (
 };
 
 // Delete Repository
-const deleteRepository = async (
-    repositoryId
-) => {
+const deleteRepository = async (repositoryId) => {
 
-    await client.delete(
-        config.qdrant.collection,
-        {
+    console.log("Deleting repository:", repositoryId);
 
-            filter: {
+    try {
 
-                must: [
-
-                    {
-
-                        key: "repositoryId",
-
-                        match: {
-
-                            value: repositoryId
-
+        const result = await client.delete(
+            config.qdrant.collection,
+            {
+                filter: {
+                    must: [
+                        {
+                            key: "repositoryId",
+                            match: {
+                                value: repositoryId
+                            }
                         }
-
-                    }
-
-                ]
-
+                    ]
+                }
             }
+        );
 
-        }
-    );
+        console.log("Qdrant Result:", result);
+
+    } catch (error) {
+
+        console.error("Qdrant Delete Error:");
+        console.error(error);
+
+        throw error;
+
+    }
 
 };
 

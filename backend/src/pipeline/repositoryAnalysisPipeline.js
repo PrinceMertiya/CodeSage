@@ -38,7 +38,9 @@ const {
 } = require("../ai/embeddingService");
 
 const {
-    saveRepository
+    saveRepository,
+    updateRepository,
+    findRepositoryByUrl
 } = require("../services/repositoryStorageService");
 
 
@@ -64,28 +66,45 @@ const {
     detectEntryPoint
 } = require("../services/entryPointDetectorService");
 
+const repositoryAnalysisPipeline = async (
 
-const repositoryAnalysisPipeline = async (repositoryUrl) => {
+    repositoryUrl,
 
-    // const { repositoryUrl } = req.body;
+    options = {}
 
-    // // Check if URL is provided
-    // if (!repositoryUrl) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: "Repository URL is required"
-    //     });
-    // }
-
-    // // Validate GitHub URL
-    // if (!repositoryUrl.startsWith("https://github.com/")) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: "Please provide a valid GitHub repository URL"
-    //     });
-    // }
+) => {
 
     try {
+
+    //     const existingRepository =
+    // await findRepositoryByUrl(repositoryUrl);
+
+    const existingRepository =
+    await findRepositoryByUrl(repositoryUrl);
+
+if (
+
+    existingRepository &&
+
+    !options.forceReanalyze
+
+) {
+
+    return {
+
+        alreadyAnalyzed: true,
+
+        repositoryId: existingRepository.id,
+
+        projectName: existingRepository.projectName,
+
+        message: "Repository already analyzed."
+
+    };
+
+}
+
+
 
         // Clone repository
         const repositoryPath = await cloneRepository(repositoryUrl);
@@ -215,30 +234,94 @@ const repositoryAnalysisPipeline = async (repositoryUrl) => {
         const project =
     detectProject(fileContents);
 
-const repository =
-    await saveRepository({
+// const repository =
+//     await saveRepository({
 
-        repositoryUrl,
+//         repositoryUrl,
 
-        project,
+//         project,
 
-        repositorySummary,
+//         repositorySummary,
 
-        repositoryMetrics,
+//         repositoryMetrics,
 
-        executionFlow,
+//         executionFlow,
 
-        repositoryGraph,
+//         repositoryGraph,
 
-        repositoryDiagram,
+//         repositoryDiagram,
 
-        functionDiagram,
+//         functionDiagram,
 
-        executionDiagram,
+//         executionDiagram,
 
-        architectureDiagram
+//         architectureDiagram
 
-    });
+//     });
+
+let repository;
+
+if (options.existingRepositoryId) {
+
+    repository =
+        await updateRepository(
+
+            options.existingRepositoryId,
+
+            {
+
+                repositoryUrl,
+
+                project,
+
+                repositorySummary,
+
+                repositoryMetrics,
+
+                executionFlow,
+
+                repositoryGraph,
+
+                repositoryDiagram,
+
+                functionDiagram,
+
+                executionDiagram,
+
+                architectureDiagram
+
+            }
+
+        );
+
+} else {
+
+    repository =
+        await saveRepository({
+
+            repositoryUrl,
+
+            project,
+
+            repositorySummary,
+
+            repositoryMetrics,
+
+            executionFlow,
+
+            repositoryGraph,
+
+            repositoryDiagram,
+
+            functionDiagram,
+
+            executionDiagram,
+
+            architectureDiagram
+
+        });
+
+}
 
 const embeddedChunks =
     await generateEmbeddings(

@@ -2,7 +2,9 @@ const {
 
     getRepositories,
 
-    getRepositoryById
+    getRepositoryById,
+
+    deleteRepositoryById
 
 } = require("../services/repositoryCrudService");
 
@@ -81,11 +83,46 @@ const getRepository = async (req, res) => {
     }
 
 };
+const deleteRepository = async (req, res) => {
+
+    try {
+
+        await deleteRepositoryById(
+
+            req.params.id
+
+        );
+
+        return res.json({
+
+            success: true,
+
+            message: "Repository deleted successfully"
+
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
+};
 
 module.exports = {
 
     getAllRepositories,
 
-    getRepository
+    getRepository,
+
+    deleteRepository
 
 };
