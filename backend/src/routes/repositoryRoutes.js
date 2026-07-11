@@ -11,6 +11,11 @@ const {
     validate
 } = require("../middlewares/validation");
 
+const {
+    protect
+} = require("../middlewares/authMiddleware");
+
+
 /**
  * @swagger
  * /repository/analyze:
@@ -18,12 +23,16 @@ const {
  *     summary: Analyze a GitHub repository
  *     tags:
  *       - Repository
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - repositoryUrl
  *             properties:
  *               repositoryUrl:
  *                 type: string
@@ -31,9 +40,12 @@ const {
  *     responses:
  *       200:
  *         description: Repository analyzed successfully
+ *       401:
+ *         description: Authentication required
  */
 router.post(
     "/analyze",
+    protect,
     validateRepository,
     validate,
     analyzeRepository

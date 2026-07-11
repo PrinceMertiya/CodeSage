@@ -25,7 +25,7 @@ const {
 
     saveChatHistory
 
-} = require("../services/chatHistoryService");
+} = require("../analysis/chatHistoryService");
 
 const askRepository = async (
     repositoryId,

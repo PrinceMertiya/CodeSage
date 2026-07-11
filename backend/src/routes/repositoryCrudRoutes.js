@@ -12,9 +12,15 @@ const {
 
     reanalyze,
 
-    getChats
+    getChats,
 
-} = require("../controllers/repositoryCrudController");
+    getTree,
+
+    getFile
+
+} = require(
+    "../controllers/repositoryCrudController"
+);
 
 const {
 
@@ -22,97 +28,80 @@ const {
 
     validate
 
-} = require("../middlewares/validation");
+} = require(
+    "../middlewares/validation"
+);
 
-/**
- * @swagger
- * /repositories:
- *   get:
- *     summary: Get all repositories
- *     tags:
- *       - Repository
- *     responses:
- *       200:
- *         description: Repository list
- */
+const {
+    protect
+} = require(
+    "../middlewares/authMiddleware"
+);
 
-// Get All
+
+/*
+|--------------------------------------------------------------------------
+| All Repository CRUD Routes Require Authentication
+|--------------------------------------------------------------------------
+*/
+
+router.use(protect);
+
+
+/*
+|--------------------------------------------------------------------------
+| Get All Repositories
+|--------------------------------------------------------------------------
+*/
+
 router.get(
     "/",
     getAllRepositories
 );
 
-/**
- * @swagger
- * /repositories/{id}:
- *   get:
- *     summary: Get repository by ID
- *     tags:
- *       - Repository
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Repository details
- */
 
-// Get One
+/*
+|--------------------------------------------------------------------------
+| Repository File Tree
+|--------------------------------------------------------------------------
+|
+| Must appear before /:id so routing stays explicit.
+|
+*/
+
 router.get(
-    "/:id",
+    "/:id/tree",
     validateRepositoryId,
     validate,
-    getRepository
-);
-
-/**
- * @swagger
- * /repositories/{id}:
- *   delete:
- *     summary: Delete repository
- *     tags:
- *       - Repository
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Repository deleted successfully
- */
-
-// Delete
-router.delete(
-    "/:id",
-    validateRepositoryId,
-    validate,
-    deleteRepository
+    getTree
 );
 
 
-/**
- * @swagger
- * /repositories/{id}/chats:
- *   get:
- *     summary: Get repository chat history
- *     tags:
- *       - AI Chat
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Chat history
- */
-// Chat History
+/*
+|--------------------------------------------------------------------------
+| Repository File Content
+|--------------------------------------------------------------------------
+|
+| Example:
+|
+| GET /repositories/:id/file?path=src/components/Navbar.tsx
+|
+*/
+
+router.get(
+    "/:id/file",
+    validateRepositoryId,
+    validate,
+    getFile
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Repository Chat History
+|--------------------------------------------------------------------------
+*/
+
 router.get(
     "/:id/chats",
     validateRepositoryId,
@@ -120,30 +109,47 @@ router.get(
     getChats
 );
 
-/**
- * @swagger
- * /repositories/{id}/reanalyze:
- *   post:
- *     summary: Reanalyze repository
- *     tags:
- *       - Repository
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Repository reanalyzed successfully
- */
 
-// Reanalyze
+/*
+|--------------------------------------------------------------------------
+| Reanalyze Repository
+|--------------------------------------------------------------------------
+*/
+
 router.post(
     "/:id/reanalyze",
     validateRepositoryId,
     validate,
     reanalyze
 );
+
+
+/*
+|--------------------------------------------------------------------------
+| Get Repository By ID
+|--------------------------------------------------------------------------
+*/
+
+router.get(
+    "/:id",
+    validateRepositoryId,
+    validate,
+    getRepository
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Delete Repository
+|--------------------------------------------------------------------------
+*/
+
+router.delete(
+    "/:id",
+    validateRepositoryId,
+    validate,
+    deleteRepository
+);
+
 
 module.exports = router;

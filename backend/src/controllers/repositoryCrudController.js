@@ -8,16 +8,28 @@ const {
 
     reanalyzeRepository,
 
-    getRepositoryChats
+    getRepositoryChats,
+
+    getRepositoryTree,
+
+    getRepositoryFileContent
 
 } = require("../services/repositoryCrudService");
 
-const getAllRepositories = async (req, res,next) => {
+
+const getAllRepositories = async (
+    req,
+    res,
+    next
+) => {
 
     try {
 
         const repositories =
-            await getRepositories();
+            await getRepositories(
+                req.user.id
+            );
+
 
         return res.json({
 
@@ -29,30 +41,30 @@ const getAllRepositories = async (req, res,next) => {
 
     } catch (error) {
 
-        // console.error(error);
-
-        // return res.status(500).json({
-
-        //     success: false,
-
-        //     message: error.message
-
-        // });
-
         next(error);
 
     }
 
 };
 
-const getRepository = async (req, res , next) => {
+
+const getRepository = async (
+    req,
+    res,
+    next
+) => {
 
     try {
 
         const repository =
             await getRepositoryById(
-                req.params.id
+
+                req.params.id,
+
+                req.user.id
+
             );
+
 
         if (!repository) {
 
@@ -60,12 +72,14 @@ const getRepository = async (req, res , next) => {
 
                 success: false,
 
-                message: "Repository not found"
+                message:
+                    "Repository not found"
 
             });
 
         }
 
+
         return res.json({
 
             success: true,
@@ -76,50 +90,40 @@ const getRepository = async (req, res , next) => {
 
     } catch (error) {
 
-        // console.error(error);
-
-        // return res.status(500).json({
-
-        //     success: false,
-
-        //     message: error.message
-
-        // });
-
         next(error);
 
     }
 
 };
-const deleteRepository = async (req, res, next) => {
+
+
+const deleteRepository = async (
+    req,
+    res,
+    next
+) => {
 
     try {
 
         await deleteRepositoryById(
 
-            req.params.id
+            req.params.id,
+
+            req.user.id
 
         );
+
 
         return res.json({
 
             success: true,
 
-            message: "Repository deleted successfully"
+            message:
+                "Repository deleted successfully"
 
         });
 
     } catch (error) {
-
-        // console.error(error);
-
-        // return res.status(500).json({
-
-        //     success: false,
-
-        //     message: error.message
-
-        // });
 
         next(error);
 
@@ -127,12 +131,24 @@ const deleteRepository = async (req, res, next) => {
 
 };
 
-const reanalyze = async (req, res ,next) => {
+
+const reanalyze = async (
+    req,
+    res,
+    next
+) => {
 
     try {
 
         const repository =
-            await reanalyzeRepository(req.params.id);
+            await reanalyzeRepository(
+
+                req.params.id,
+
+                req.user.id
+
+            );
+
 
         return res.json({
 
@@ -144,30 +160,30 @@ const reanalyze = async (req, res ,next) => {
 
     } catch (error) {
 
-        // console.error(error);
-
-        // return res.status(500).json({
-
-        //     success: false,
-
-        //     message: error.message
-
-        // });
-
         next(error);
 
     }
 
 };
 
-const getChats = async (req, res, next) => {
+
+const getChats = async (
+    req,
+    res,
+    next
+) => {
 
     try {
 
         const history =
             await getRepositoryChats(
-                req.params.id
+
+                req.params.id,
+
+                req.user.id
+
             );
+
 
         return res.json({
 
@@ -179,21 +195,96 @@ const getChats = async (req, res, next) => {
 
     } catch (error) {
 
-        // console.error(error);
+        next(error);
 
-        // return res.status(500).json({
+    }
 
-        //     success: false,
+};
 
-        //     message: error.message
 
-        // });
+/*
+|--------------------------------------------------------------------------
+| Repository Tree
+|--------------------------------------------------------------------------
+*/
+
+const getTree = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const tree =
+            await getRepositoryTree(
+
+                req.params.id,
+
+                req.user.id
+
+            );
+
+
+        return res.json({
+
+            success: true,
+
+            tree
+
+        });
+
+    } catch (error) {
 
         next(error);
 
     }
 
 };
+
+
+/*
+|--------------------------------------------------------------------------
+| Repository File
+|--------------------------------------------------------------------------
+*/
+
+const getFile = async (
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        const file =
+            await getRepositoryFileContent(
+
+                req.params.id,
+
+                req.user.id,
+
+                req.query.path
+
+            );
+
+
+        return res.json({
+
+            success: true,
+
+            file
+
+        });
+
+    } catch (error) {
+
+        next(error);
+
+    }
+
+};
+
 
 module.exports = {
 
@@ -202,9 +293,13 @@ module.exports = {
     getRepository,
 
     deleteRepository,
-    
+
     reanalyze,
 
-    getChats
+    getChats,
+
+    getTree,
+
+    getFile
 
 };

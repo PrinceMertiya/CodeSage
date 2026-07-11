@@ -1,6 +1,9 @@
-const prisma = require("../config/database");
+const prisma =
+    require("../config/database");
+
 
 const saveRepository = async ({
+    userId,
     repositoryUrl,
     project,
     repositorySummary,
@@ -16,6 +19,8 @@ const saveRepository = async ({
     return await prisma.repository.create({
 
         data: {
+
+            userId,
 
             repositoryUrl,
 
@@ -57,13 +62,19 @@ const saveRepository = async ({
 
 };
 
-const getRepository = async (repositoryId) => {
 
-    return await prisma.repository.findUnique({
+const getRepository = async (
+    repositoryId,
+    userId
+) => {
+
+    return await prisma.repository.findFirst({
 
         where: {
 
-            id: repositoryId
+            id: repositoryId,
+
+            userId
 
         }
 
@@ -71,54 +82,78 @@ const getRepository = async (repositoryId) => {
 
 };
 
-const findRepositoryByUrl = async (repositoryUrl) => {
+
+const findRepositoryByUrl = async (
+    repositoryUrl,
+    userId
+) => {
 
     return await prisma.repository.findUnique({
 
         where: {
-            repositoryUrl
+
+            userId_repositoryUrl: {
+
+                userId,
+
+                repositoryUrl
+
+            }
+
         }
 
     });
 
 };
+
 
 const updateRepository = async (
-
     repositoryId,
-
+    userId,
     {
-
         repositoryUrl,
-
         project,
-
         repositorySummary,
-
         repositoryMetrics,
-
         executionFlow,
-
         repositoryGraph,
-
         repositoryDiagram,
-
         functionDiagram,
-
         executionDiagram,
-
         architectureDiagram
+    }
+) => {
+
+    /*
+     * Verify repository ownership before updating.
+     */
+    const existingRepository =
+        await prisma.repository.findFirst({
+
+            where: {
+
+                id: repositoryId,
+
+                userId
+
+            }
+
+        });
+
+
+    if (!existingRepository) {
+
+        throw new Error(
+            "Repository not found or access denied"
+        );
 
     }
 
-) => {
 
     return await prisma.repository.update({
 
         where: {
-
             id: repositoryId
-
         },
 
         data: {
@@ -162,6 +197,7 @@ const updateRepository = async (
     });
 
 };
+
 
 module.exports = {
 

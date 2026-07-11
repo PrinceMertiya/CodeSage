@@ -7,42 +7,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id String @id @default(cuid())
+
+  name     String
+  email    String @unique
+  password String
+
+  avatarUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  repositories Repository[]
+
+  @@index([email])
+}
+
 model Repository {
   id String @id @default(cuid())
 
-  repositoryUrl String @unique
+  userId String
+
+  repositoryUrl String
 
   projectName String
-
   projectType String?
 
   architecture String?
 
-  frameworks Json?
-
-  metrics Json?
-
-  summary Json?
-
-  executionFlow Json?
-
-  project Json?
-
+  frameworks      Json?
+  metrics         Json?
+  summary         Json?
+  executionFlow   Json?
+  project         Json?
   repositoryGraph Json?
 
-  repositoryDiagram String?
-
-  functionDiagram String?
-
-  executionDiagram String?
-
+  repositoryDiagram   String?
+  functionDiagram     String?
+  executionDiagram    String?
   architectureDiagram String?
 
   createdAt DateTime @default(now())
-
   updatedAt DateTime @updatedAt
 
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files RepositoryFile[]
   chats ChatHistory[]
+
+  @@unique([userId, repositoryUrl])
+  @@index([userId])
+}
+
+model RepositoryFile {
+  id String @id @default(cuid())
+
+  repositoryId String
+
+  name         String
+  relativePath String
+
+  extension String?
+  language  String?
+
+  size  Int
+  lines Int
+
+  content   String
+  structure Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, relativePath])
+  @@index([repositoryId])
 }
 
 model ChatHistory {
@@ -51,10 +91,11 @@ model ChatHistory {
   repositoryId String
 
   question String
-
-  answer String
+  answer   String
 
   createdAt DateTime @default(now())
 
   repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([repositoryId])
 }

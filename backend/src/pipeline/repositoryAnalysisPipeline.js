@@ -9,7 +9,9 @@ const { buildRepositoryGraph } = require("../services/repositoryGraphService");
 
 const { analyzeDependencies } = require("../services/dependencyAnalyzerService");
 const { buildFunctionLookup } = require("../services/functionLookupService");
-
+const {
+    saveRepositoryFiles
+} = require("../services/repositoryFileService");
 const { detectDeadCode } = require("../services/deadCodeService");
 
 const {
@@ -67,27 +69,36 @@ const {
 } = require("../services/entryPointDetectorService");
 
 const repositoryAnalysisPipeline = async (
-
     repositoryUrl,
-
     options = {}
-
 ) => {
 
     try {
 
-    //     const existingRepository =
-    // await findRepositoryByUrl(repositoryUrl);
+        const {
+            userId,
+            forceReanalyze = false,
+            existingRepositoryId
+        } = options;
+
+
+        if (!userId) {
+
+            throw new Error(
+                "User ID is required for repository analysis"
+            );
+
+        }
 
     const existingRepository =
-    await findRepositoryByUrl(repositoryUrl);
+    await findRepositoryByUrl(
+        repositoryUrl,
+        userId
+    );
 
 if (
-
     existingRepository &&
-
-    !options.forceReanalyze
-
+    !forceReanalyze
 ) {
 
     return {
@@ -261,12 +272,13 @@ if (
 
 let repository;
 
-if (options.existingRepositoryId) {
+if (existingRepositoryId) {
 
     repository =
         await updateRepository(
 
-            options.existingRepositoryId,
+            existingRepositoryId,
+            userId,
 
             {
 
@@ -299,6 +311,8 @@ if (options.existingRepositoryId) {
     repository =
         await saveRepository({
 
+            userId,
+
             repositoryUrl,
 
             project,
@@ -322,6 +336,10 @@ if (options.existingRepositoryId) {
         });
 
 }
+await saveRepositoryFiles(
+    repository.id,
+    fileContents
+);
 
 const embeddedChunks =
     await generateEmbeddings(
@@ -331,6 +349,8 @@ const embeddedChunks =
         semanticChunks
 
     );
+
+
 
        
 

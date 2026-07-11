@@ -1,4 +1,5 @@
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
 
 const repositoryRoutes =
     require("./routes/repositoryRoutes");
@@ -9,57 +10,90 @@ const repositoryChatRoutes =
 const repositoryCrudRoutes =
     require("./routes/repositoryCrudRoutes");
 
+const repositoryDashboardRoutes =
+    require("./routes/repositoryDashboardRoutes");
+
+const authRoutes =
+    require("./routes/authRoutes");
+
 const errorHandler =
     require("./middlewares/errorHandler");
-
-const app = express();
-
-const swaggerUi =
-    require("swagger-ui-express");
 
 const swaggerSpec =
     require("./config/swagger");
 
-console.log("APP:" , swaggerSpec.paths);
+
+const app = express();
+
+
+/*
+|--------------------------------------------------------------------------
+| Global Middleware
+|--------------------------------------------------------------------------
+*/
 
 app.use(express.json());
 
 
-
-const repositoryDashboardRoutes =
-    require("./routes/repositoryDashboardRoutes");
-
-    
-
-
+/*
+|--------------------------------------------------------------------------
+| Swagger Documentation
+|--------------------------------------------------------------------------
+*/
 
 app.use(
-
     "/api-docs",
-
     swaggerUi.serve,
-
     swaggerUi.setup(swaggerSpec)
+);
 
+
+/*
+|--------------------------------------------------------------------------
+| Authentication Routes
+|--------------------------------------------------------------------------
+*/
+
+app.use(
+    "/auth",
+    authRoutes
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Repository Routes
+|--------------------------------------------------------------------------
+*/
+
+app.use(
+    "/repositories",
+    repositoryDashboardRoutes
 );
 
 app.use(
-
-    "/repositories",
-
-    repositoryDashboardRoutes
-
+    "/repository",
+    repositoryRoutes
 );
-
-app.use("/repository", repositoryRoutes);
 
 app.use(
     "/repositories",
     repositoryCrudRoutes
 );
 
-app.use("/repository/chat", repositoryChatRoutes);
+app.use(
+    "/repository/chat",
+    repositoryChatRoutes
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Error Handler
+|--------------------------------------------------------------------------
+*/
 
 app.use(errorHandler);
+
 
 module.exports = app;
