@@ -17,9 +17,7 @@ const {
     getRepositoryFile
 } = require("./repositoryFileService");
 
-const {
-    ApiError
-} = require("../utils/ApiError");
+const ApiError = require("../utils/ApiError");
 
 
 /*

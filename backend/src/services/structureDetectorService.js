@@ -1,39 +1,92 @@
-const { parseJavaScript } = require("./jsParser");
-const { parsePython } = require("./pythonParser");
+const {
 
-const detectStructure = (language, content) => {
+    parseJavaScript
 
-    console.log("Language:", language);
+} = require("./jsParser");
+
+
+const {
+
+    parsePython
+
+} = require("./pythonParser");
+
+
+const detectStructure = (
+
+    language,
+
+    content
+
+) => {
+
 
     switch (language) {
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | JavaScript / React / TypeScript
+        |--------------------------------------------------------------------------
+        */
+
         case "JavaScript":
 
-            console.log("Calling JS Parser...");
+        case "TypeScript":
 
-            return parseJavaScript(content);
+            return parseJavaScript(
+
+                content
+
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Python
+        |--------------------------------------------------------------------------
+        */
 
         case "Python":
 
-            console.log("Calling Python Parser...");
+            return parsePython(
 
-            const result = parsePython(content);
+                content
 
-            console.dir(result, { depth: null });
+            );
 
-            return result;
 
+        /*
+        |--------------------------------------------------------------------------
+        | Unsupported Languages
+        |--------------------------------------------------------------------------
+        */
 
         default:
 
-            console.log("Unknown language");
+            return {
 
-            return null;
+                imports: [],
+
+                classes: [],
+
+                functions: [],
+
+                arrowFunctions: [],
+
+                exports: [],
+
+                topLevelCalls: []
+
+            };
 
     }
 
 };
 
+
 module.exports = {
+
     detectStructure
+
 };

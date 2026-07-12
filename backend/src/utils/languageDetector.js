@@ -2,11 +2,15 @@ const extensionMap = {
 
     ".js": "JavaScript",
 
-    ".jsx": "React",
+    ".jsx": "JavaScript",
+
+    ".mjs": "JavaScript",
+
+    ".cjs": "JavaScript",
 
     ".ts": "TypeScript",
 
-    ".tsx": "React TypeScript",
+    ".tsx": "TypeScript",
 
     ".py": "Python",
 
@@ -32,12 +36,31 @@ const extensionMap = {
 
 };
 
+
 const detectLanguage = (extension) => {
 
-    return extensionMap[extension] || "Unknown";
+    if (!extension) {
+
+        return "Unknown";
+
+    }
+
+
+    return (
+
+        extensionMap[
+            extension.toLowerCase()
+        ] ||
+
+        "Unknown"
+
+    );
 
 };
 
+
 module.exports = {
+
     detectLanguage
+
 };

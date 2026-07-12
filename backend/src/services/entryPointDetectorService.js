@@ -1,18 +1,31 @@
 const path = require("path");
 
+
 const detectEntryPoint = (files) => {
 
-    const commonEntryFiles = [
+    const priorityEntryFiles = [
 
-        // JavaScript
-        "index.js",
-        "app.js",
+        // Node / JavaScript
         "server.js",
+        "app.js",
+        "index.js",
         "main.js",
 
+        // React / JSX
+        "main.jsx",
+        "index.jsx",
+        "App.jsx",
+
         // TypeScript
-        "index.ts",
         "main.ts",
+        "index.ts",
+        "server.ts",
+        "app.ts",
+
+        // React / TSX
+        "main.tsx",
+        "index.tsx",
+        "App.tsx",
 
         // Python
         "app.py",
@@ -27,38 +40,32 @@ const detectEntryPoint = (files) => {
         // C#
         "Program.cs",
 
-        // C/C++
+        // C / C++
         "main.cpp",
         "main.c"
 
     ];
 
-    // --------------------------
-    // 1. Exact filename match
-    // --------------------------
 
-    for (const file of files) {
+    // ==========================================
+    // 1. Priority Entry File Match
+    // ==========================================
 
-        const filename = path.basename(file.relativePath);
+    for (const entryName of priorityEntryFiles) {
 
-        if (commonEntryFiles.includes(filename)) {
+        const file = files.find((currentFile) => {
 
-            return file.id;
+            const filename =
+                path.basename(
+                    currentFile.relativePath
+                );
 
-        }
+            return filename === entryName;
 
-    }
+        });
 
-    // --------------------------
-    // 2. Python top-level calls
-    // --------------------------
 
-    for (const file of files) {
-
-        if (
-            file.language === "Python" &&
-            file.structure?.topLevelCalls?.length > 0
-        ) {
+        if (file) {
 
             return file.id;
 
@@ -66,44 +73,71 @@ const detectEntryPoint = (files) => {
 
     }
 
-    // --------------------------
-    // 3. JavaScript exports/routes
-    // --------------------------
 
-    for (const file of files) {
+    // ==========================================
+    // 2. File With Top-Level Calls
+    // ==========================================
 
-        if (
-            file.language === "JavaScript" &&
-            (
-                file.structure?.exports?.length ||
-                file.structure?.topLevelCalls?.length
-            )
-        ) {
+    const fileWithTopLevelCalls =
+        files.find(
 
-            return file.id;
+            (file) =>
 
-        }
+                file.structure
+                    ?.topLevelCalls
+                    ?.length > 0
+
+        );
+
+
+    if (fileWithTopLevelCalls) {
+
+        return fileWithTopLevelCalls.id;
 
     }
 
-    // --------------------------
-    // 4. Largest source file
-    // --------------------------
+
+    // ==========================================
+    // 3. File With Outgoing Imports
+    // ==========================================
+
+    const fileWithImports =
+        files.find(
+
+            (file) =>
+
+                file.structure
+                    ?.imports
+                    ?.length > 0
+
+        );
+
+
+    if (fileWithImports) {
+
+        return fileWithImports.id;
+
+    }
+
+
+    // ==========================================
+    // 4. Largest Source File
+    // ==========================================
 
     let largest = null;
 
+
     for (const file of files) {
 
-        if (!largest) {
-
-            largest = file;
-
-            continue;
-
-        }
-
-        if ((file.content?.length || 0) >
-            (largest.content?.length || 0)) {
+        if (
+            !largest ||
+            (
+                file.content?.length || 0
+            ) >
+            (
+                largest.content?.length || 0
+            )
+        ) {
 
             largest = file;
 
@@ -111,9 +145,11 @@ const detectEntryPoint = (files) => {
 
     }
 
-    return largest?.id || null;
+
+    return largest?.id ?? null;
 
 };
+
 
 module.exports = {
 

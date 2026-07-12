@@ -1,5 +1,7 @@
 const express = require("express");
-const swaggerUi = require("swagger-ui-express");
+const cors = require("cors");
+const swaggerUi =
+    require("swagger-ui-express");
 
 const repositoryRoutes =
     require("./routes/repositoryRoutes");
@@ -19,9 +21,8 @@ const authRoutes =
 const errorHandler =
     require("./middlewares/errorHandler");
 
-const swaggerSpec =
+const swaggerDocument =
     require("./config/swagger");
-
 
 const app = express();
 
@@ -32,58 +33,72 @@ const app = express();
 |--------------------------------------------------------------------------
 */
 
+app.use(
+    cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+    })
+);
+
 app.use(express.json());
 
 
 /*
 |--------------------------------------------------------------------------
-| Swagger Documentation
+| Authentication
 |--------------------------------------------------------------------------
 */
 
 app.use(
-    "/api-docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec)
-);
-
-
-/*
-|--------------------------------------------------------------------------
-| Authentication Routes
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-    "/auth",
+    "/api/auth",
     authRoutes
 );
 
 
 /*
 |--------------------------------------------------------------------------
-| Repository Routes
+| Repository Analysis / Chat
 |--------------------------------------------------------------------------
 */
 
 app.use(
-    "/repositories",
-    repositoryDashboardRoutes
-);
-
-app.use(
-    "/repository",
+    "/api/repository",
     repositoryRoutes
 );
 
 app.use(
-    "/repositories",
+    "/api/repository",
+    repositoryChatRoutes
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Repository CRUD / Dashboard
+|--------------------------------------------------------------------------
+*/
+
+app.use(
+    "/api/repositories",
     repositoryCrudRoutes
 );
 
 app.use(
-    "/repository/chat",
-    repositoryChatRoutes
+    "/api/repositories",
+    repositoryDashboardRoutes
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| Swagger
+|--------------------------------------------------------------------------
+*/
+
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
 );
 
 

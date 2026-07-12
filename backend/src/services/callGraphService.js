@@ -2,11 +2,72 @@ const {
     resolveSymbol
 } = require("./symbolResolverService");
 
+
 const buildCallGraph = (
     graph,
     files,
     functionLookup
 ) => {
+
+    const edgeKeys =
+        new Set(
+
+            graph.edges.map(
+
+                (edge) =>
+
+                    `${edge.from}|${edge.to}|${edge.type}`
+
+            )
+
+        );
+
+
+    const addCallEdge = (
+        from,
+        to
+    ) => {
+
+        if (
+            !from ||
+            !to ||
+            from === to
+        ) {
+
+            return;
+
+        }
+
+
+        const key =
+            `${from}|${to}|calls`;
+
+
+        if (
+            edgeKeys.has(key)
+        ) {
+
+            return;
+
+        }
+
+
+        edgeKeys.add(key);
+
+
+        graph.edges.push({
+
+            from,
+
+            to,
+
+            type:
+                "calls"
+
+        });
+
+    };
+
 
     // ==========================================
     // Function → Function Calls
@@ -14,32 +75,161 @@ const buildCallGraph = (
 
     for (const file of files) {
 
-        if (!file.structure) continue;
+        if (
+            !file.structure
+        ) {
+
+            continue;
+
+        }
+
 
         const normalizedPath =
-            file.relativePath.replace(/\\/g, "/");
+            file.relativePath
+                .replace(/\\/g, "/");
+
 
         const allFunctions = [
 
-            ...(file.structure.functions || []),
+            ...(
+                file.structure.functions ||
+                []
+            ),
 
-            ...(file.structure.arrowFunctions || [])
+            ...(
+                file.structure.arrowFunctions ||
+                []
+            )
 
         ];
 
-        for (const func of allFunctions) {
 
-            if (!func.calls) continue;
+        for (
+            const func
+            of allFunctions
+        ) {
+
+            if (
+                !func.name ||
+                !func.calls
+            ) {
+
+                continue;
+
+            }
+
 
             const fromId =
                 `${normalizedPath}:${func.name}`;
 
-            for (const call of func.calls) {
 
-                // Ignore object calls
-                if (call.object) continue;
+            for (
+                const call
+                of func.calls
+            ) {
 
-                const target = resolveSymbol(
+                if (
+                    !call?.name
+                ) {
+
+                    continue;
+
+                }
+
+
+                /*
+                 * First try resolving the function
+                 * by its actual called symbol.
+                 *
+                 * For object calls, this may still
+                 * resolve if the method/function
+                 * exists in our repository lookup.
+                 */
+
+                const target =
+                    resolveSymbol(
+
+                        file,
+
+                        call.name,
+
+                        files,
+
+                        functionLookup
+
+                    );
+
+
+                if (
+                    !target
+                ) {
+
+                    continue;
+
+                }
+
+
+                const targetPath =
+                    target.file
+                        .relativePath
+                        .replace(
+                            /\\/g,
+                            "/"
+                        );
+
+
+                const toId =
+                    `${targetPath}:${target.function.name}`;
+
+
+                addCallEdge(
+
+                    fromId,
+
+                    toId
+
+                );
+
+            }
+
+        }
+
+    }
+
+
+    // ==========================================
+    // Top-Level Calls
+    // ==========================================
+
+    for (const file of files) {
+
+        if (
+            !file.structure
+                ?.topLevelCalls
+                ?.length
+        ) {
+
+            continue;
+
+        }
+
+
+        for (
+            const call
+            of file.structure.topLevelCalls
+        ) {
+
+            if (
+                !call?.name
+            ) {
+
+                continue;
+
+            }
+
+
+            const target =
+                resolveSymbol(
 
                     file,
 
@@ -51,74 +241,43 @@ const buildCallGraph = (
 
                 );
 
-                if (!target) continue;
 
-                const targetPath =
-                    target.file.relativePath.replace(/\\/g, "/");
+            if (
+                !target
+            ) {
 
-                const toId =
-                    `${targetPath}:${target.function.name}`;
-
-                graph.edges.push({
-
-                    from: fromId,
-
-                    to: toId,
-
-                    type: "calls"
-
-                });
+                continue;
 
             }
 
-        }
 
-    }
+            const targetPath =
+                target.file
+                    .relativePath
+                    .replace(
+                        /\\/g,
+                        "/"
+                    );
 
-    // ==========================================
-    // Top Level Calls
-    // ==========================================
-
-    for (const file of files) {
-
-        if (!file.structure?.topLevelCalls) continue;
-
-        for (const call of file.structure.topLevelCalls) {
-
-            if (call.object) continue;
-
-            const target = resolveSymbol(
-
-                file,
-
-                call.name,
-
-                files,
-
-                functionLookup
-
-            );
-
-            if (!target) continue;
 
             const toId =
-                `${target.file.relativePath.replace(/\\/g, "/")}:${target.function.name}`;
+                `${targetPath}:${target.function.name}`;
 
-            graph.edges.push({
 
-                from: file.id,
+            addCallEdge(
 
-                to: toId,
+                file.id,
 
-                type: "calls"
+                toId
 
-            });
+            );
 
         }
 
     }
 
 };
+
 
 module.exports = {
 

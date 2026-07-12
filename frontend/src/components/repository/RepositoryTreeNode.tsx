@@ -7,13 +7,15 @@ import {
   FileCode2,
 } from "lucide-react";
 
-import type { TreeNode } from "../../constants/fileExplorer";
+import type {
+  RepositoryTreeNode
+} from "../../services/repository.service";
 
 interface Props {
-  node: TreeNode;
+  node: RepositoryTreeNode;
   level?: number;
   selectedFile?: string;
-  onSelect: (node: TreeNode) => void;
+  onSelect: (node: RepositoryTreeNode) => void;
 }
 
 export default function RepositoryTreeNode({

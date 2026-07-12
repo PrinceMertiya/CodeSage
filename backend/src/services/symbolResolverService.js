@@ -1,84 +1,285 @@
 const path = require("path");
 
-const resolveSymbol = (
+
+const normalizePath = (filePath) => {
+
+    return filePath
+        .replace(/\\/g, "/")
+        .replace(/^\.\//, "");
+
+};
+
+
+const getAllFunctions = (file) => {
+
+    return [
+
+        ...(file.structure?.functions || []),
+
+        ...(file.structure?.arrowFunctions || [])
+
+    ];
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Resolve Imported File
+|--------------------------------------------------------------------------
+*/
+
+const resolveImportedFile = (
+
     currentFile,
-    symbol,
-    files,
-    functionLookup
+
+    imported,
+
+    files
+
 ) => {
 
-    // -----------------------------
-    // 1. Direct lookup
-    // -----------------------------
 
-    if (functionLookup[symbol]) {
+    /*
+    |--------------------------------------------------------------------------
+    | External packages cannot resolve to repository files
+    |--------------------------------------------------------------------------
+    */
 
-        return functionLookup[symbol];
+    if (
 
-    }
+        !imported.startsWith(".")
 
-    // -----------------------------
-    // 2. Resolve through imports
-    // -----------------------------
-
-    if (!currentFile.structure?.imports) {
+    ) {
 
         return null;
 
     }
 
-    for (const imported of currentFile.structure.imports) {
 
-        let importPath;
+    const currentPath =
 
-        if (currentFile.language === "Python") {
+        normalizePath(
 
-            importPath =
-                imported.replace(/\./g, "/") + ".py";
+            currentFile.relativePath
 
-        }
-        else {
+        );
 
-            const currentDir =
-                path.dirname(currentFile.relativePath);
 
-            importPath = path
-                .normalize(
-                    path.join(currentDir, imported)
+    const currentDirectory =
+
+        path.posix.dirname(
+
+            currentPath
+
+        );
+
+
+    const basePath =
+
+        normalizePath(
+
+            path.posix.normalize(
+
+                path.posix.join(
+
+                    currentDirectory,
+
+                    imported
+
                 )
-                .replace(/\\/g, "/");
 
-            if (!importPath.endsWith(".js")) {
+            )
 
-                importPath += ".js";
+        );
+
+
+    const candidates = [
+
+        basePath,
+
+        `${basePath}.js`,
+
+        `${basePath}.jsx`,
+
+        `${basePath}.ts`,
+
+        `${basePath}.tsx`,
+
+        `${basePath}/index.js`,
+
+        `${basePath}/index.jsx`,
+
+        `${basePath}/index.ts`,
+
+        `${basePath}/index.tsx`
+
+    ];
+
+
+    return (
+
+        files.find(
+
+            file => {
+
+                const filePath =
+
+                    normalizePath(
+
+                        file.relativePath
+
+                    );
+
+
+                return candidates.includes(
+
+                    filePath
+
+                );
 
             }
 
-        }
+        ) || null
 
-        const targetFile = files.find(file =>
-            file.relativePath
-                .replace(/\\/g, "/")
-                .endsWith(importPath)
+    );
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Resolve Symbol
+|--------------------------------------------------------------------------
+*/
+
+const resolveSymbol = (
+
+    currentFile,
+
+    symbol,
+
+    files,
+
+    functionLookup
+
+) => {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | 1. Same File
+    |--------------------------------------------------------------------------
+    |
+    | Prefer functions from the current file.
+    |
+    */
+
+    const localFunction =
+
+        getAllFunctions(
+
+            currentFile
+
+        ).find(
+
+            func =>
+
+                func.name === symbol
+
         );
 
-        if (!targetFile) {
+
+    if (
+
+        localFunction
+
+    ) {
+
+        return {
+
+            file:
+
+                currentFile,
+
+            function:
+
+                localFunction
+
+        };
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | 2. Imported Files
+    |--------------------------------------------------------------------------
+    */
+
+    for (
+
+        const imported
+
+        of currentFile.structure?.imports || []
+
+    ) {
+
+
+        const targetFile =
+
+            resolveImportedFile(
+
+                currentFile,
+
+                imported,
+
+                files
+
+            );
+
+
+        if (
+
+            !targetFile
+
+        ) {
 
             continue;
 
         }
 
-        const targetFunction =
-            (targetFile.structure?.functions || [])
-                .find(func => func.name === symbol);
 
-        if (targetFunction) {
+        const targetFunction =
+
+            getAllFunctions(
+
+                targetFile
+
+            ).find(
+
+                func =>
+
+                    func.name === symbol
+
+            );
+
+
+        if (
+
+            targetFunction
+
+        ) {
 
             return {
 
-                file: targetFile,
+                file:
 
-                function: targetFunction
+                    targetFile,
+
+                function:
+
+                    targetFunction
 
             };
 
@@ -86,9 +287,64 @@ const resolveSymbol = (
 
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | 3. Global Fallback
+    |--------------------------------------------------------------------------
+    */
+
+    const candidates =
+
+        functionLookup[
+            symbol
+        ];
+
+
+    if (
+
+        Array.isArray(
+
+            candidates
+
+        ) &&
+
+        candidates.length === 1
+
+    ) {
+
+        return candidates[0];
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Backward Compatibility
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+
+        candidates &&
+
+        !Array.isArray(
+
+            candidates
+
+        )
+
+    ) {
+
+        return candidates;
+
+    }
+
+
     return null;
 
 };
+
 
 module.exports = {
 

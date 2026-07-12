@@ -1,79 +1,364 @@
 const path = require("path");
 
-const { buildFunctionLookup } = require("./functionLookupService");
 
-const { buildCallGraph } = require("./callGraphService");
+const {
 
-const buildRepositoryGraph = (files) => {
+    buildFunctionLookup
+
+} = require("./functionLookupService");
+
+
+const {
+
+    buildCallGraph
+
+} = require("./callGraphService");
+
+
+/*
+|--------------------------------------------------------------------------
+| Normalize Path
+|--------------------------------------------------------------------------
+*/
+
+const normalizePath = (
+
+    filePath
+
+) => {
+
+    return filePath
+
+        .replace(/\\/g, "/")
+
+        .replace(/^\.\//, "");
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Resolve Internal Import
+|--------------------------------------------------------------------------
+*/
+
+const resolveInternalImport = (
+
+    sourcePath,
+
+    importedPath,
+
+    fileLookup
+
+) => {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Only relative imports are internal
+    |--------------------------------------------------------------------------
+    */
+
+
+    if (
+
+        !importedPath.startsWith(".")
+
+    ) {
+
+        return null;
+
+    }
+
+
+    const sourceDirectory =
+
+        path.posix.dirname(
+
+            sourcePath
+
+        );
+
+
+    const basePath =
+
+        normalizePath(
+
+            path.posix.normalize(
+
+                path.posix.join(
+
+                    sourceDirectory,
+
+                    importedPath
+
+                )
+
+            )
+
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Possible File Extensions
+    |--------------------------------------------------------------------------
+    */
+
+
+    const candidates = [
+
+        basePath,
+
+        `${basePath}.js`,
+
+        `${basePath}.jsx`,
+
+        `${basePath}.ts`,
+
+        `${basePath}.tsx`,
+
+        `${basePath}.json`,
+
+        `${basePath}/index.js`,
+
+        `${basePath}/index.jsx`,
+
+        `${basePath}/index.ts`,
+
+        `${basePath}/index.tsx`
+
+    ];
+
+
+    for (
+
+        const candidate
+
+        of candidates
+
+    ) {
+
+
+        if (
+
+            fileLookup[
+                candidate
+            ]
+
+        ) {
+
+            return (
+
+                fileLookup[
+                    candidate
+                ]
+
+            );
+
+        }
+
+    }
+
+
+    return null;
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Build Repository Graph
+|--------------------------------------------------------------------------
+*/
+
+const buildRepositoryGraph = (
+
+    files
+
+) => {
+
 
     const graph = {
+
         nodes: [],
+
         edges: []
+
     };
 
-    const functionLookup = buildFunctionLookup(files);
+
+    const functionLookup =
+
+        buildFunctionLookup(
+
+            files
+
+        );
+
+
     const fileLookup = {};
 
-    // ==========================================
-    // Create File + Function + Class Nodes
-    // ==========================================
 
-    for (const file of files) {
+    /*
+    |--------------------------------------------------------------------------
+    | Create File Lookup
+    |--------------------------------------------------------------------------
+    */
 
-        const normalizedPath = file.relativePath.replace(/\\/g, "/");
 
-        fileLookup[normalizedPath] = file;
+    for (
 
-        // -------------------------
-        // File Node
-        // -------------------------
+        const file
+
+        of files
+
+    ) {
+
+
+        const normalizedPath =
+
+            normalizePath(
+
+                file.relativePath
+
+            );
+
+
+        fileLookup[
+            normalizedPath
+        ] = file;
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Create File / Function / Class Nodes
+    |--------------------------------------------------------------------------
+    */
+
+
+    for (
+
+        const file
+
+        of files
+
+    ) {
+
+
+        const normalizedPath =
+
+            normalizePath(
+
+                file.relativePath
+
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | File Node
+        |--------------------------------------------------------------------------
+        */
+
 
         graph.nodes.push({
 
-            id: file.id,
+            id:
 
-            type: "file",
+                file.id,
 
-            name: file.name,
+            type:
 
-            path: normalizedPath,
+                "file",
 
-            language: file.language
+            name:
+
+                file.name,
+
+            path:
+
+                normalizedPath,
+
+            language:
+
+                file.language
 
         });
 
-        // -------------------------
-        // Function Nodes
-        // -------------------------
 
-        if (file.structure?.functions) {
+        /*
+        |--------------------------------------------------------------------------
+        | Normal Function Nodes
+        |--------------------------------------------------------------------------
+        */
 
-            for (const func of file.structure.functions) {
+
+        if (
+
+            file.structure?.functions
+
+        ) {
+
+
+            for (
+
+                const func
+
+                of file.structure.functions
+
+            ) {
+
+
+                const functionId =
+
+                    `${normalizedPath}:${func.name}`;
+
 
                 graph.nodes.push({
 
-                    // id: func.id,
-                    id: `${normalizedPath}:${func.name}`,
+                    id:
 
-                    type: "function",
+                        functionId,
 
-                    name: func.name,
+                    type:
 
-                    file: normalizedPath,
+                        "function",
 
-                    startLine: func.startLine,
+                    name:
 
-                    endLine: func.endLine
+                        func.name,
+
+                    file:
+
+                        normalizedPath,
+
+                    startLine:
+
+                        func.startLine,
+
+                    endLine:
+
+                        func.endLine
 
                 });
 
+
                 graph.edges.push({
 
-                    from: file.id,
+                    from:
 
-                    to: `${normalizedPath}:${func.name}`,
+                        file.id,
 
-                    type: "contains"
+                    to:
+
+                        functionId,
+
+                    type:
+
+                        "contains"
 
                 });
 
@@ -81,39 +366,77 @@ const buildRepositoryGraph = (files) => {
 
         }
 
-        // -------------------------
-        // Arrow Function Nodes
-        // -------------------------
 
-        if (file.structure?.arrowFunctions) {
+        /*
+        |--------------------------------------------------------------------------
+        | Arrow Function Nodes
+        |--------------------------------------------------------------------------
+        */
 
-            for (const func of file.structure.arrowFunctions) {
+
+        if (
+
+            file.structure?.arrowFunctions
+
+        ) {
+
+
+            for (
+
+                const func
+
+                of file.structure.arrowFunctions
+
+            ) {
+
+
+                const functionId =
+
+                    `${normalizedPath}:${func.name}`;
+
 
                 graph.nodes.push({
 
-                    // id: func.id,
+                    id:
 
-                    id: `${normalizedPath}:${func.name}`,
+                        functionId,
 
-                    type: "arrow-function",
+                    type:
 
-                    name: func.name,
+                        "arrow-function",
 
-                    file: normalizedPath,
+                    name:
 
-                    startLine: func.startLine,
+                        func.name,
 
-                    endLine: func.endLine
+                    file:
+
+                        normalizedPath,
+
+                    startLine:
+
+                        func.startLine,
+
+                    endLine:
+
+                        func.endLine
 
                 });
 
+
                 graph.edges.push({
 
-                    from: file.id,
+                    from:
 
-                    to: `${normalizedPath}:${func.name}`,
+                        file.id,
 
-                    type: "contains"
+                    to:
+
+                        functionId,
+
+                    type:
+
+                        "contains"
 
                 });
 
@@ -121,84 +444,147 @@ const buildRepositoryGraph = (files) => {
 
         }
 
-        // -------------------------
-        // Class Nodes
-        // -------------------------
 
-        if (file.structure?.classes) {
-
-
-
-            for (const cls of file.structure.classes) {
+        /*
+        |--------------------------------------------------------------------------
+        | Class Nodes
+        |--------------------------------------------------------------------------
+        */
 
 
-                const classId = `${normalizedPath}:${cls.name}`;
+        if (
+
+            file.structure?.classes
+
+        ) {
+
+
+            for (
+
+                const cls
+
+                of file.structure.classes
+
+            ) {
+
+
+                const classId =
+
+                    `${normalizedPath}:${cls.name}`;
+
 
                 graph.nodes.push({
 
-                    // id: cls.id,
+                    id:
 
-                    id: `${normalizedPath}:${cls.name}`,
+                        classId,
 
-                    type: "class",
+                    type:
 
-                    name: cls.name,
+                        "class",
 
-                    file: normalizedPath,
+                    name:
 
-                    startLine: cls.startLine,
+                        cls.name,
 
-                    endLine: cls.endLine
+                    file:
+
+                        normalizedPath,
+
+                    startLine:
+
+                        cls.startLine,
+
+                    endLine:
+
+                        cls.endLine
 
                 });
+
 
                 graph.edges.push({
 
-                    from: file.id,
+                    from:
 
-                    // to: cls.id,
+                        file.id,
 
+                    to:
 
+                        classId,
 
-                    to: classId,
+                    type:
 
-                    type: "contains"
+                        "contains"
 
                 });
 
-                // -------------------------
-                // Method Nodes
-                // -------------------------
 
-                if (cls.methods) {
+                /*
+                |--------------------------------------------------------------------------
+                | Class Method Nodes
+                |--------------------------------------------------------------------------
+                */
 
-                    for (const method of cls.methods) {
 
-                        // const methodId = `${cls.id}_${method}`;
+                if (
 
-                        const classId = `${normalizedPath}:${cls.name}`;
+                    cls.methods
 
-                        const methodId = `${classId}:${method}`;
+                ) {
+
+
+                    for (
+
+                        const method
+
+                        of cls.methods
+
+                    ) {
+
+
+                        const methodId =
+
+                            `${classId}:${method}`;
+
 
                         graph.nodes.push({
 
-                            id: methodId,
+                            id:
 
-                            type: "method",
+                                methodId,
 
-                            name: method,
+                            type:
 
-                            class: cls.name
+                                "method",
+
+                            name:
+
+                                method,
+
+                            class:
+
+                                cls.name,
+
+                            file:
+
+                                normalizedPath
 
                         });
 
+
                         graph.edges.push({
 
-                            from: classId,
+                            from:
 
-                            to: methodId,
+                                classId,
 
-                            type: "has-method"
+                            to:
+
+                                methodId,
+
+                            type:
+
+                                "has-method"
 
                         });
 
@@ -212,153 +598,220 @@ const buildRepositoryGraph = (files) => {
 
     }
 
-    // // ==========================================
-    // // entry Level Call Relationships
-    // // ==========================================
 
-    // for (const file of files) {
+    /*
+    |--------------------------------------------------------------------------
+    | Import Relationships
+    |--------------------------------------------------------------------------
+    */
 
-    //     if (!file.structure?.topLevelCalls) continue;
 
-    //     const fromId = file.id;
+    for (
 
-    //     for (const call of file.structure.topLevelCalls) {
+        const file
 
-    //         const target = functionLookup[call];
+        of files
 
-    //         if (!target) continue;
+    ) {
 
-    //         const toId =
-    //             `${target.file.relativePath.replace(/\\/g, "/")}:${target.function.name}`;
 
-    //         graph.edges.push({
+        if (
 
-    //             from: fromId,
+            !file.structure?.imports
 
-    //             to: toId,
+        ) {
 
-    //             type: "entry"
+            continue;
 
-    //         });
+        }
 
-    //     }
 
-    // }
+        const sourcePath =
 
-    // ==========================================
-    // Import Relationships
-    // ==========================================
+            normalizePath(
 
-    for (const file of files) {
+                file.relativePath
 
-        if (!file.structure?.imports) continue;
-
-        const sourcePath = file.relativePath.replace(/\\/g, "/");
-
-        const sourceId = file.id;
-
-        for (const imported of file.structure.imports) {
-
-            let targetPath = null;
-
-            // Python imports
-
-            if (file.language === "Python") {
-
-                targetPath =
-                    imported.replace(/\./g, "/") + ".py";
-
-            }
-
-            // JavaScript imports
-
-            else if (file.language === "JavaScript") {
-
-                const sourceDir = path.dirname(sourcePath);
-
-                targetPath = path
-                    .normalize(
-                        path.join(sourceDir, imported)
-                    )
-                    .replace(/\\/g, "/");
-
-                if (!targetPath.endsWith(".js")) {
-
-                    targetPath += ".js";
-
-                }
-
-            }
-
-            // Internal File
-
-            const targetFile = Object.values(fileLookup).find(f =>
-                f.relativePath.replace(/\\/g, "/").endsWith(targetPath)
             );
 
-            if (targetFile) {
 
-                graph.edges.push({
+        const sourceId =
 
-                    from: sourceId,
+            file.id;
 
-                    to: targetFile.id,
 
-                    type: "imports"
+        for (
 
-                });
+            const imported
 
-            }
+            of file.structure.imports
 
-            // External Library
+        ) {
 
-            else {
 
-                const externalId = `lib_${imported}`;
+            /*
+            |--------------------------------------------------------------------------
+            | Try Internal Import
+            |--------------------------------------------------------------------------
+            */
 
-                const exists = graph.nodes.find(
-                    node => node.id === externalId
+
+            const targetFile =
+
+                resolveInternalImport(
+
+                    sourcePath,
+
+                    imported,
+
+                    fileLookup
+
                 );
 
-                if (!exists) {
 
-                    graph.nodes.push({
+            if (
 
-                        id: externalId,
+                targetFile
 
-                        type: "library",
+            ) {
 
-                        name: imported
-
-                    });
-
-                }
 
                 graph.edges.push({
 
-                    from: sourceId,
+                    from:
 
-                    to: externalId,
+                        sourceId,
 
-                    type: "external"
+                    to:
+
+                        targetFile.id,
+
+                    type:
+
+                        "imports"
+
+                });
+
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Relative Import Not Resolved
+            |--------------------------------------------------------------------------
+            |
+            | Do not mark broken relative imports as external libraries.
+            |
+            */
+
+
+            if (
+
+                imported.startsWith(".")
+
+            ) {
+
+                continue;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | External Library
+            |--------------------------------------------------------------------------
+            */
+
+
+            const externalId =
+
+                `lib_${imported}`;
+
+
+            const exists =
+
+                graph.nodes.some(
+
+                    node =>
+
+                        node.id ===
+                        externalId
+
+                );
+
+
+            if (
+
+                !exists
+
+            ) {
+
+
+                graph.nodes.push({
+
+                    id:
+
+                        externalId,
+
+                    type:
+
+                        "library",
+
+                    name:
+
+                        imported
 
                 });
 
             }
+
+
+            graph.edges.push({
+
+                from:
+
+                    sourceId,
+
+                to:
+
+                    externalId,
+
+                type:
+
+                    "external"
+
+            });
 
         }
 
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Build Function Call Graph
+    |--------------------------------------------------------------------------
+    */
+
+
     buildCallGraph(
+
         graph,
+
         files,
+
         functionLookup
+
     );
+
 
     return graph;
 
 };
+
 
 module.exports = {
 
