@@ -2,7 +2,11 @@ const { cloneRepository } = require("../services/repositoryService");
 const { scanRepository } = require("../services/scannerService");
 const { readFiles } = require("../services/fileReaderService");
 const { detectProject } = require("../services/projectDetectorService");
-
+const {
+    detectArchitecture
+} = require(
+    "../services/architectureDetectorService"
+);
 const { generateChunks } = require("../services/chunkGeneratorService");
 
 const { buildRepositoryGraph } = require("../services/repositoryGraphService");
@@ -269,53 +273,35 @@ if (
 //         architectureDiagram
 
 //     });
+const architecture =
+    detectArchitecture(
+
+        project,
+
+        fileContents,
+
+        repositoryGraph
+
+    );
 
 let repository;
 
 if (existingRepositoryId) {
 
     repository =
-        await updateRepository(
+    await updateRepository(
 
-            existingRepositoryId,
-            userId,
+        existingRepositoryId,
 
-            {
+        userId,
 
-                repositoryUrl,
-
-                project,
-
-                repositorySummary,
-
-                repositoryMetrics,
-
-                executionFlow,
-
-                repositoryGraph,
-
-                repositoryDiagram,
-
-                functionDiagram,
-
-                executionDiagram,
-
-                architectureDiagram
-
-            }
-
-        );
-
-} else {
-
-    repository =
-        await saveRepository({
-
-            userId,
+        {
 
             repositoryUrl,
 
             project,
+
+            architecture,
 
             repositorySummary,
 
@@ -333,7 +319,40 @@ if (existingRepositoryId) {
 
             architectureDiagram
 
-        });
+        }
+
+    );
+
+} else {
+
+    repository =
+    await saveRepository({
+
+        userId,
+
+        repositoryUrl,
+
+        project,
+
+        architecture,
+
+        repositorySummary,
+
+        repositoryMetrics,
+
+        executionFlow,
+
+        repositoryGraph,
+
+        repositoryDiagram,
+
+        functionDiagram,
+
+        executionDiagram,
+
+        architectureDiagram
+
+    });
 
 }
 await saveRepositoryFiles(

@@ -1,28 +1,18 @@
 const {
-
     parseJavaScript
-
 } = require("./jsParser");
 
-
 const {
-
     parsePython
-
 } = require("./pythonParser");
 
 
 const detectStructure = (
-
     language,
-
     content
-
 ) => {
 
-
     switch (language) {
-
 
         /*
         |--------------------------------------------------------------------------
@@ -31,13 +21,12 @@ const detectStructure = (
         */
 
         case "JavaScript":
-
+        case "React":
         case "TypeScript":
+        case "React TypeScript":
 
             return parseJavaScript(
-
                 content
-
             );
 
 
@@ -50,9 +39,7 @@ const detectStructure = (
         case "Python":
 
             return parsePython(
-
                 content
-
             );
 
 

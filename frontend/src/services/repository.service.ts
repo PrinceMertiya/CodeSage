@@ -5,6 +5,7 @@ import { api } from "./api";
 | Repository Types
 |--------------------------------------------------------------------------
 */
+
 export interface RepositoryDetails {
   id: string;
   repositoryUrl: string;
@@ -28,10 +29,23 @@ export interface RepositoryDetails {
   updatedAt: string;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Repository Details Response
+|--------------------------------------------------------------------------
+*/
+
 interface RepositoryResponse {
   success: boolean;
   repository: RepositoryDetails;
 }
+
+/*
+|--------------------------------------------------------------------------
+| Repository Tree Types
+|--------------------------------------------------------------------------
+*/
+
 export interface RepositoryTreeNode {
   id: string;
   name: string;
@@ -70,35 +84,81 @@ interface FileResponse {
 
 /*
 |--------------------------------------------------------------------------
+| Repository Chat Types
+|--------------------------------------------------------------------------
+*/
+
+// export interface RepositoryChatSource {
+//   file: string;
+//   title: string;
+//   type: string;
+// }
+
+export interface RepositoryChatResponse {
+  success: boolean;
+  answer: string;
+  sources: RepositoryChatSource[];
+}
+
+export interface RepositoryChatSource {
+  file: string;
+  title?: string;
+  type?: string;
+}
+
+export interface RepositoryChatHistoryItem {
+  id: string;
+  repositoryId: string;
+  question: string;
+  answer: string;
+  sources: RepositoryChatSource[] | null;
+  createdAt: string;
+}
+
+export interface RepositoryChatHistoryResponse {
+  success: boolean;
+  history: RepositoryChatHistoryItem[];
+}
+
+/*
+|--------------------------------------------------------------------------
 | Repository Service
 |--------------------------------------------------------------------------
 */
 
 export const RepositoryService = {
-  analyze: (repositoryUrl: string) =>
+  analyze: (
+    repositoryUrl: string,
+  ) =>
     api.post(
       "/repository/analyze",
       {
         repositoryUrl,
-      }
+      },
     ),
 
   getRepositories: () =>
-    api.get("/repositories"),
+    api.get(
+      "/repositories",
+    ),
 
-  getRepository: (id: string) =>
-  api.get<RepositoryResponse>(
-    `/repositories/${id}`
-  ),
+  getRepository: (
+    id: string,
+  ) =>
+    api.get<RepositoryResponse>(
+      `/repositories/${id}`,
+    ),
 
-  getTree: (id: string) =>
+  getTree: (
+    id: string,
+  ) =>
     api.get<TreeResponse>(
-      `/repositories/${id}/tree`
+      `/repositories/${id}/tree`,
     ),
 
   getFile: (
     id: string,
-    path: string
+    path: string,
   ) =>
     api.get<FileResponse>(
       `/repositories/${id}/file`,
@@ -106,16 +166,45 @@ export const RepositoryService = {
         params: {
           path,
         },
-      }
+      },
     ),
 
-  deleteRepository: (id: string) =>
+  deleteRepository: (
+    id: string,
+  ) =>
     api.delete(
-      `/repositories/${id}`
+      `/repositories/${id}`,
     ),
 
-  reanalyzeRepository: (id: string) =>
+  reanalyzeRepository: (
+    id: string,
+  ) =>
     api.post(
-      `/repositories/${id}/reanalyze`
+      `/repositories/${id}/reanalyze`,
     ),
+
+  /*
+  |--------------------------------------------------------------------------
+  | Repository AI Chat
+  |--------------------------------------------------------------------------
+  */
+
+  chat: (
+    repositoryId: string,
+    question: string,
+  ) =>
+    api.post<RepositoryChatResponse>(
+      "/repository",
+      {
+        repositoryId,
+        question,
+      },
+    ),
+
+    getChatHistory: (
+  repositoryId: string,
+) =>
+  api.get<RepositoryChatHistoryResponse>(
+    `/repositories/${repositoryId}/chats`,
+  ),
 };

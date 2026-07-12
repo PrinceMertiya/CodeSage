@@ -1,13 +1,11 @@
 const prisma = require("../config/database");
 
+
 const saveChatHistory = async (
-
     repositoryId,
-
     question,
-
-    answer
-
+    answer,
+    sources = []
 ) => {
 
     return await prisma.chatHistory.create({
@@ -18,7 +16,9 @@ const saveChatHistory = async (
 
             question,
 
-            answer
+            answer,
+
+            sources
 
         }
 
@@ -26,7 +26,10 @@ const saveChatHistory = async (
 
 };
 
-const getChatHistory = async (repositoryId) => {
+
+const getChatHistory = async (
+    repositoryId
+) => {
 
     return await prisma.chatHistory.findMany({
 
@@ -45,6 +48,7 @@ const getChatHistory = async (repositoryId) => {
     });
 
 };
+
 
 module.exports = {
 

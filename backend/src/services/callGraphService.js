@@ -9,10 +9,16 @@ const buildCallGraph = (
     functionLookup
 ) => {
 
+    /*
+    |--------------------------------------------------------------------------
+    | Existing Edge Lookup
+    |--------------------------------------------------------------------------
+    */
+
     const edgeKeys =
         new Set(
 
-            graph.edges.map(
+            (graph.edges || []).map(
 
                 (edge) =>
 
@@ -22,6 +28,12 @@ const buildCallGraph = (
 
         );
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Add Unique Call Edge
+    |--------------------------------------------------------------------------
+    */
 
     const addCallEdge = (
         from,
@@ -61,22 +73,98 @@ const buildCallGraph = (
 
             to,
 
-            type:
-                "calls"
+            type: "calls"
 
         });
 
     };
 
 
-    // ==========================================
-    // Function → Function Calls
-    // ==========================================
+    /*
+    |--------------------------------------------------------------------------
+    | Convert Resolved Symbol To Graph Node ID
+    |--------------------------------------------------------------------------
+    */
 
-    for (const file of files) {
+    const getTargetId = (
+        target
+    ) => {
+
+        /*
+         * resolveSymbol() should normally return:
+         *
+         * {
+         *     file,
+         *     function
+         * }
+         *
+         * Never assume that shape is valid.
+         */
 
         if (
-            !file.structure
+            !target ||
+            !target.file ||
+            !target.function
+        ) {
+
+            return null;
+
+        }
+
+
+        if (
+            typeof target.file.relativePath
+                !== "string" ||
+            !target.file.relativePath
+        ) {
+
+            return null;
+
+        }
+
+
+        if (
+            typeof target.function.name
+                !== "string" ||
+            !target.function.name
+        ) {
+
+            return null;
+
+        }
+
+
+        const targetPath =
+            target.file.relativePath
+                .replace(
+                    /\\/g,
+                    "/"
+                );
+
+
+        return (
+            `${targetPath}:${target.function.name}`
+        );
+
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Function → Function Calls
+    |--------------------------------------------------------------------------
+    */
+
+    for (
+        const file
+        of files
+    ) {
+
+        if (
+            !file ||
+            !file.structure ||
+            typeof file.relativePath
+                !== "string"
         ) {
 
             continue;
@@ -86,7 +174,10 @@ const buildCallGraph = (
 
         const normalizedPath =
             file.relativePath
-                .replace(/\\/g, "/");
+                .replace(
+                    /\\/g,
+                    "/"
+                );
 
 
         const allFunctions = [
@@ -110,8 +201,11 @@ const buildCallGraph = (
         ) {
 
             if (
+                !func ||
                 !func.name ||
-                !func.calls
+                !Array.isArray(
+                    func.calls
+                )
             ) {
 
                 continue;
@@ -129,22 +223,14 @@ const buildCallGraph = (
             ) {
 
                 if (
-                    !call?.name
+                    !call ||
+                    !call.name
                 ) {
 
                     continue;
 
                 }
 
-
-                /*
-                 * First try resolving the function
-                 * by its actual called symbol.
-                 *
-                 * For object calls, this may still
-                 * resolve if the method/function
-                 * exists in our repository lookup.
-                 */
 
                 const target =
                     resolveSymbol(
@@ -160,26 +246,19 @@ const buildCallGraph = (
                     );
 
 
+                const toId =
+                    getTargetId(
+                        target
+                    );
+
+
                 if (
-                    !target
+                    !toId
                 ) {
 
                     continue;
 
                 }
-
-
-                const targetPath =
-                    target.file
-                        .relativePath
-                        .replace(
-                            /\\/g,
-                            "/"
-                        );
-
-
-                const toId =
-                    `${targetPath}:${target.function.name}`;
 
 
                 addCallEdge(
@@ -197,16 +276,24 @@ const buildCallGraph = (
     }
 
 
-    // ==========================================
-    // Top-Level Calls
-    // ==========================================
+    /*
+    |--------------------------------------------------------------------------
+    | Top-Level Calls
+    |--------------------------------------------------------------------------
+    */
 
-    for (const file of files) {
+    for (
+        const file
+        of files
+    ) {
 
         if (
-            !file.structure
-                ?.topLevelCalls
-                ?.length
+            !file ||
+            !file.id ||
+            !Array.isArray(
+                file.structure
+                    ?.topLevelCalls
+            )
         ) {
 
             continue;
@@ -216,11 +303,13 @@ const buildCallGraph = (
 
         for (
             const call
-            of file.structure.topLevelCalls
+            of file.structure
+                .topLevelCalls
         ) {
 
             if (
-                !call?.name
+                !call ||
+                !call.name
             ) {
 
                 continue;
@@ -242,26 +331,19 @@ const buildCallGraph = (
                 );
 
 
+            const toId =
+                getTargetId(
+                    target
+                );
+
+
             if (
-                !target
+                !toId
             ) {
 
                 continue;
 
             }
-
-
-            const targetPath =
-                target.file
-                    .relativePath
-                    .replace(
-                        /\\/g,
-                        "/"
-                    );
-
-
-            const toId =
-                `${targetPath}:${target.function.name}`;
 
 
             addCallEdge(

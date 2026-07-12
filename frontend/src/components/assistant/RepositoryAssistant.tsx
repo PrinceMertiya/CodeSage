@@ -1,6 +1,9 @@
 import {
+  useEffect,
   useState,
 } from "react";
+
+import axios from "axios";
 
 import AssistantHeader from "./AssistantHeader";
 import AssistantInput from "./AssistantInput";
@@ -10,6 +13,10 @@ import AssistantSuggestions from "./AssistantSuggestions";
 import type {
   ChatMessage,
 } from "./AssistantMessage";
+
+import {
+  RepositoryService,
+} from "../../services/repository.service";
 
 interface Props {
   repositoryId: string;
@@ -28,14 +35,124 @@ export default function RepositoryAssistant({
   const [
     messages,
     setMessages,
-  ] = useState<ChatMessage[]>(
-    [],
-  );
+  ] = useState<ChatMessage[]>([]);
 
   const [
     isLoading,
     setIsLoading,
   ] = useState(false);
+
+  const [
+    isHistoryLoading,
+    setIsHistoryLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState<string | null>(null);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Load Saved Chat History
+  |--------------------------------------------------------------------------
+  */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadChatHistory =
+      async () => {
+        try {
+          const response =
+            await RepositoryService
+              .getChatHistory(
+                repositoryId,
+              );
+
+          if (cancelled) {
+            return;
+          }
+
+          /*
+          |--------------------------------------------------------------------------
+          | Backend returns newest first.
+          | Reverse so the conversation displays oldest → newest.
+          |--------------------------------------------------------------------------
+          */
+
+          const history =
+            [...response.data.history]
+              .reverse();
+
+          const historyMessages:
+            ChatMessage[] =
+            history.flatMap(
+              (chat) => [
+                {
+                  id:
+                    `${chat.id}-question`,
+                  role:
+                    "user" as const,
+                  content:
+                    chat.question,
+                },
+                {
+  id:
+    `${chat.id}-answer`,
+  role:
+    "assistant" as const,
+  content:
+    chat.answer,
+  sources:
+    Array.isArray(
+      chat.sources,
+    )
+      ? chat.sources
+      : [],
+},
+              ],
+            );
+
+          setMessages(
+            historyMessages,
+          );
+
+          setError(null);
+        } catch (error) {
+          if (cancelled) {
+            return;
+          }
+
+          console.error(
+            "Failed to load chat history:",
+            error,
+          );
+
+          setError(
+            "Unable to load previous chat history.",
+          );
+        } finally {
+          if (!cancelled) {
+            setIsHistoryLoading(
+              false,
+            );
+          }
+        }
+      };
+
+    void loadChatHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [repositoryId]);
+
+  /*
+  |--------------------------------------------------------------------------
+  | Send Message
+  |--------------------------------------------------------------------------
+  */
 
   const sendMessage = async (
     customMessage?: string,
@@ -51,9 +168,10 @@ export default function RepositoryAssistant({
       return;
     }
 
-    const userMessage: ChatMessage =
-      {
-        id: crypto.randomUUID(),
+    const userMessage:
+      ChatMessage = {
+        id:
+          crypto.randomUUID(),
         role: "user",
         content,
       };
@@ -66,45 +184,108 @@ export default function RepositoryAssistant({
     );
 
     setInput("");
+    setError(null);
     setIsLoading(true);
 
-    /*
-    |--------------------------------------------------------------------------
-    | Temporary Frontend Response
-    |--------------------------------------------------------------------------
-    |
-    | We will replace this with the real
-    | CodeSage repository chat API next.
-    |
-    */
+    try {
+      const response =
+        await RepositoryService
+          .chat(
+            repositoryId,
+            content,
+          );
 
-    await new Promise(
-      (resolve) =>
-        setTimeout(
-          resolve,
-          800,
-        ),
-    );
+      const {
+        answer,
+        sources
+      } = response.data;
 
-    const assistantMessage: ChatMessage =
-      {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content:
-          `I received your question about ${repositoryName}.\n\n` +
-          `Repository ID: ${repositoryId}\n\n` +
-          `The frontend assistant is working. The next step is connecting this conversation to the CodeSage backend AI chat API.`,
-      };
+      if (!answer) {
+        throw new Error(
+          "The AI API returned no answer.",
+        );
+      }
 
-    setMessages(
-      (current) => [
-        ...current,
-        assistantMessage,
-      ],
-    );
-
-    setIsLoading(false);
+      const assistantMessage:
+  ChatMessage = {
+    id:
+      crypto.randomUUID(),
+    role:
+      "assistant",
+    content:
+      answer,
+    sources:
+      Array.isArray(sources)
+        ? sources
+        : [],
   };
+
+      setMessages(
+        (current) => [
+          ...current,
+          assistantMessage,
+        ],
+      );
+    } catch (error) {
+      console.error(
+        "Repository AI chat failed:",
+        error,
+      );
+
+      let message =
+        "Unable to get a response from CodeSage AI.";
+
+      if (
+        axios.isAxiosError(
+          error,
+        )
+      ) {
+        const apiMessage =
+          error.response
+            ?.data
+            ?.message;
+
+        if (
+          typeof apiMessage ===
+          "string"
+        ) {
+          message =
+            apiMessage;
+        }
+      } else if (
+        error instanceof Error
+      ) {
+        message =
+          error.message;
+      }
+
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /*
+  |--------------------------------------------------------------------------
+  | Loading Chat History
+  |--------------------------------------------------------------------------
+  */
+
+  if (isHistoryLoading) {
+    return (
+      <div className="flex min-h-[700px] items-center justify-center rounded-3xl border border-white/10 bg-[#0D1117]">
+        <p className="text-sm text-zinc-400">
+          Loading conversation...
+        </p>
+      </div>
+    );
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | Render
+  |--------------------------------------------------------------------------
+  */
 
   return (
     <div className="flex min-h-[700px] flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0D1117]">
@@ -126,16 +307,26 @@ export default function RepositoryAssistant({
         />
       ) : (
         <AssistantMessages
-          messages={messages}
+          messages={
+            messages
+          }
           isLoading={
             isLoading
           }
         />
       )}
 
+      {error && (
+        <div className="mx-5 mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
       <AssistantInput
         value={input}
-        onChange={setInput}
+        onChange={
+          setInput
+        }
         onSubmit={() => {
           void sendMessage();
         }}

@@ -105,7 +105,9 @@ await saveChatHistory(
 
     question,
 
-    answer
+    answer,
+
+    sources
 
 );
 

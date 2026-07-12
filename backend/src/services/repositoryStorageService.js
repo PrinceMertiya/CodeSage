@@ -1,86 +1,4 @@
-const prisma =
-    require("../config/database");
-
-
-const saveRepository = async ({
-    userId,
-    repositoryUrl,
-    project,
-    repositorySummary,
-    repositoryMetrics,
-    executionFlow,
-    repositoryGraph,
-    repositoryDiagram,
-    functionDiagram,
-    executionDiagram,
-    architectureDiagram
-}) => {
-
-    return await prisma.repository.create({
-
-        data: {
-
-            userId,
-
-            repositoryUrl,
-
-            projectName:
-                repositorySummary.projectName,
-
-            projectType:
-                repositorySummary.projectType,
-
-            architecture:
-                repositorySummary.architecture,
-
-            frameworks:
-                repositorySummary.frameworks,
-
-            summary:
-                repositorySummary,
-
-            metrics:
-                repositoryMetrics,
-
-            executionFlow,
-
-            project,
-
-            repositoryGraph,
-
-            repositoryDiagram,
-
-            functionDiagram,
-
-            executionDiagram,
-
-            architectureDiagram
-
-        }
-
-    });
-
-};
-
-
-const getRepository = async (
-    repositoryId,
-    userId
-) => {
-
-    return await prisma.repository.findFirst({
-
-        where: {
-
-            id: repositoryId,
-
-            userId
-
-        }
-
-    });
-
-};
+const prisma = require("../config/database");
 
 
 const findRepositoryByUrl = async (
@@ -107,90 +25,197 @@ const findRepositoryByUrl = async (
 };
 
 
-const updateRepository = async (
-    repositoryId,
-    userId,
-    {
+const saveRepository = async (data) => {
+
+    const {
+
+        userId,
+
         repositoryUrl,
+
         project,
+
+        architecture,
+
         repositorySummary,
+
         repositoryMetrics,
+
         executionFlow,
+
         repositoryGraph,
+
         repositoryDiagram,
+
         functionDiagram,
+
         executionDiagram,
+
         architectureDiagram
-    }
-) => {
 
-    /*
-     * Verify repository ownership before updating.
-     */
-    const existingRepository =
-        await prisma.repository.findFirst({
-
-            where: {
-
-                id: repositoryId,
-
-                userId
-
-            }
-
-        });
+    } = data;
 
 
-    if (!existingRepository) {
-
-        throw new Error(
-            "Repository not found or access denied"
-        );
-
-    }
-
-
-    return await prisma.repository.update({
-
-        where: {
-            id: repositoryId
-        },
+    return await prisma.repository.create({
 
         data: {
+
+            userId,
 
             repositoryUrl,
 
             projectName:
-                repositorySummary.projectName,
+                project?.projectName ||
+                project?.name ||
+                "Unknown Project",
 
             projectType:
-                repositorySummary.projectType,
+                project?.projectType ||
+                project?.type ||
+                null,
 
             architecture:
-                repositorySummary.architecture,
+                architecture ||
+                null,
 
             frameworks:
-                repositorySummary.frameworks,
+                project?.frameworks ||
+                [],
+
+            project:
+                project ||
+                null,
 
             summary:
-                repositorySummary,
+                repositorySummary ||
+                null,
 
             metrics:
-                repositoryMetrics,
+                repositoryMetrics ||
+                null,
 
-            executionFlow,
+            executionFlow:
+                executionFlow ||
+                null,
 
-            project,
+            repositoryGraph:
+                repositoryGraph ||
+                null,
 
-            repositoryGraph,
+            repositoryDiagram:
+                repositoryDiagram ||
+                null,
 
-            repositoryDiagram,
+            functionDiagram:
+                functionDiagram ||
+                null,
 
-            functionDiagram,
+            executionDiagram:
+                executionDiagram ||
+                null,
 
-            executionDiagram,
+            architectureDiagram:
+                architectureDiagram ||
+                null
 
-            architectureDiagram
+        }
+
+    });
+
+};
+
+
+const updateRepository = async (
+    repositoryId,
+    userId,
+    data
+) => {
+
+    return await prisma.repository.update({
+
+        where: {
+
+            id:
+                repositoryId
+
+        },
+
+        data: {
+
+            repositoryUrl:
+                data.repositoryUrl,
+
+            projectName:
+                data.project?.projectName ||
+                data.project?.name ||
+                "Unknown Project",
+
+            projectType:
+                data.project?.projectType ||
+                data.project?.type ||
+                null,
+
+            architecture:
+                data.architecture ||
+                null,
+
+            frameworks:
+                data.project?.frameworks ||
+                [],
+
+            project:
+                data.project ||
+                null,
+
+            summary:
+                data.repositorySummary ||
+                null,
+
+            metrics:
+                data.repositoryMetrics ||
+                null,
+
+            executionFlow:
+                data.executionFlow ||
+                null,
+
+            repositoryGraph:
+                data.repositoryGraph ||
+                null,
+
+            repositoryDiagram:
+                data.repositoryDiagram ||
+                null,
+
+            functionDiagram:
+                data.functionDiagram ||
+                null,
+
+            executionDiagram:
+                data.executionDiagram ||
+                null,
+
+            architectureDiagram:
+                data.architectureDiagram ||
+                null
+
+        }
+
+    });
+
+};
+
+
+const getRepository = async (
+    repositoryId
+) => {
+
+    return await prisma.repository.findUnique({
+
+        where: {
+
+            id:
+                repositoryId
 
         }
 
@@ -203,10 +228,10 @@ module.exports = {
 
     saveRepository,
 
-    getRepository,
+    updateRepository,
 
     findRepositoryByUrl,
 
-    updateRepository
+    getRepository
 
 };

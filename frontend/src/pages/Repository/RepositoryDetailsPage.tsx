@@ -10,8 +10,9 @@ import {
 import {
   useLocation,
   useParams,
+  useSearchParams,
 } from "react-router-dom";
-
+import RepositoryInsights from "../../components/insights/RepositoryInsights";
 import RepositoryAssistant from "../../components/assistant/RepositoryAssistant";
 
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
@@ -23,6 +24,8 @@ import RepositoryOverview from "../../components/repository/RepositoryOverview";
 import RepositoryFileExplorer from "../../components/repository/RepositoryFileExplorer";
 import RepositoryCodeViewer from "../../components/repository/RepositoryCodeViewer";
 
+import ArchitectureViewer from "../../components/architecture/ArchitectureViewer";
+
 import {
   RepositoryService,
 } from "../../services/repository.service";
@@ -32,13 +35,14 @@ import type {
 } from "../../services/repository.service";
 
 
-import ArchitectureViewer from "../../components/architecture/ArchitectureViewer";
-
-
 export default function RepositoryDetailsPage() {
-
   const location =
     useLocation();
+
+  const [
+    searchParams,
+    setSearchParams,
+  ] = useSearchParams();
 
   const {
     id,
@@ -46,16 +50,28 @@ export default function RepositoryDetailsPage() {
     id: string;
   }>();
 
-
   const repositoryId =
     id ?? "";
-
 
   const currentTab =
     location.pathname
       .split("/")[3] ||
     "overview";
 
+  /*
+  |--------------------------------------------------------------------------
+  | Selected File
+  |--------------------------------------------------------------------------
+  |
+  | The URL is the source of truth:
+  |
+  | /repositories/:id/files?path=src/App.jsx
+  |
+  */
+
+  const selectedFile =
+    searchParams.get("path") ??
+    undefined;
 
   const [
     repository,
@@ -64,18 +80,10 @@ export default function RepositoryDetailsPage() {
     RepositoryDetails | null
   >(null);
 
-
-  const [
-    selectedFile,
-    setSelectedFile,
-  ] = useState<string>();
-
-
   const [
     isLoading,
     setIsLoading,
   ] = useState(true);
-
 
   const [
     error,
@@ -84,7 +92,6 @@ export default function RepositoryDetailsPage() {
     null,
   );
 
-
   /*
   |--------------------------------------------------------------------------
   | Load Repository Details
@@ -92,81 +99,72 @@ export default function RepositoryDetailsPage() {
   */
 
   useEffect(() => {
-
     if (!repositoryId) {
       return;
     }
 
-
     let cancelled = false;
-
 
     const fetchRepository =
       async () => {
-
         try {
-
           const response =
             await RepositoryService
               .getRepository(
                 repositoryId,
               );
 
-
           if (cancelled) {
             return;
           }
-
 
           setRepository(
             response.data.repository,
           );
 
           setError(null);
-
         } catch (error) {
-
           if (cancelled) {
             return;
           }
-
 
           console.error(
             "Failed to load repository:",
             error,
           );
 
-
           setError(
             "Unable to load repository.",
           );
-
         } finally {
-
           if (!cancelled) {
-
             setIsLoading(false);
-
           }
-
         }
-
       };
-
 
     void fetchRepository();
 
-
     return () => {
-
       cancelled = true;
-
     };
-
   }, [
     repositoryId,
   ]);
 
+  /*
+  |--------------------------------------------------------------------------
+  | File Selection
+  |--------------------------------------------------------------------------
+  */
+
+  const handleFileSelect = (
+    filePath: string,
+  ) => {
+    setSearchParams({
+      path: filePath,
+    });
+  };
 
   /*
   |--------------------------------------------------------------------------
@@ -175,14 +173,10 @@ export default function RepositoryDetailsPage() {
   */
 
   if (isLoading) {
-
     return (
       <DashboardLayout>
-
         <div className="flex min-h-[600px] items-center justify-center">
-
           <div className="text-center">
-
             <LoaderCircle
               size={40}
               className="mx-auto animate-spin text-indigo-400"
@@ -191,16 +185,11 @@ export default function RepositoryDetailsPage() {
             <p className="mt-4 text-zinc-400">
               Loading repository...
             </p>
-
           </div>
-
         </div>
-
       </DashboardLayout>
     );
-
   }
-
 
   /*
   |--------------------------------------------------------------------------
@@ -212,26 +201,48 @@ export default function RepositoryDetailsPage() {
     error ||
     !repository
   ) {
-
     return (
       <DashboardLayout>
-
         <div className="flex min-h-[600px] items-center justify-center">
-
           <p className="text-zinc-400">
-
             {error ??
               "Repository not found."}
-
           </p>
-
         </div>
-
       </DashboardLayout>
     );
-
   }
 
+  /*
+  |--------------------------------------------------------------------------
+  | Repository Owner
+  |--------------------------------------------------------------------------
+  */
+
+  const getRepositoryOwner = (
+    repositoryUrl: string,
+  ) => {
+    try {
+      const url =
+        new URL(
+          repositoryUrl,
+        );
+
+      return (
+        url.pathname
+          .split("/")
+          .filter(Boolean)[0] ??
+        "Unknown"
+      );
+    } catch {
+      return "Unknown";
+    }
+  };
+
+  const owner =
+    getRepositoryOwner(
+      repository.repositoryUrl,
+    );
 
   /*
   |--------------------------------------------------------------------------
@@ -239,31 +250,7 @@ export default function RepositoryDetailsPage() {
   |--------------------------------------------------------------------------
   */
 
-
-
-  const getRepositoryOwner = (
-  repositoryUrl: string,
-) => {
-  try {
-    const url = new URL(repositoryUrl);
-
-    return (
-      url.pathname
-        .split("/")
-        .filter(Boolean)[0] ??
-      "Unknown"
-    );
-  } catch {
-    return "Unknown";
-  }
-};
-
-const owner =
-  getRepositoryOwner(
-    repository.repositoryUrl,
-  );
   const headerRepository = {
-
     name:
       repository.projectName,
 
@@ -286,13 +273,10 @@ const owner =
       new Date(
         repository.updatedAt,
       ).toLocaleString(),
-
   };
-
 
   return (
     <DashboardLayout>
-
       <Breadcrumb
         items={[
           "Repositories",
@@ -300,38 +284,35 @@ const owner =
         ]}
       />
 
-
       <RepositoryHeader
-        repository={
-          headerRepository
-        }
-      />
 
+  repositoryId={
+    repositoryId
+  }
+
+  repository={
+    headerRepository
+  }
+
+
+      />
 
       <RepositoryTabs />
 
-
       <div className="mt-10">
-
         {currentTab ===
           "overview" && (
-
           <RepositoryOverview
             repository={
               repository
             }
           />
-
         )}
-
 
         {currentTab ===
           "files" && (
-
           <div className="grid gap-6 lg:grid-cols-12">
-
             <div className="lg:col-span-3">
-
               <RepositoryFileExplorer
                 repositoryId={
                   repositoryId
@@ -342,26 +323,19 @@ const owner =
                 onSelect={(
                   file,
                 ) => {
-
                   if (
                     file.type ===
                     "file"
                   ) {
-
-                    setSelectedFile(
+                    handleFileSelect(
                       file.path,
                     );
-
                   }
-
                 }}
               />
-
             </div>
 
-
             <div className="lg:col-span-9">
-
               <RepositoryCodeViewer
                 repositoryId={
                   repositoryId
@@ -370,71 +344,37 @@ const owner =
                   selectedFile
                 }
               />
-
             </div>
-
           </div>
-
         )}
 
+        {currentTab ===
+          "architecture" && (
+          <ArchitectureViewer
+            repository={
+              repository
+            }
+          />
+        )}
 
-        {currentTab === "architecture" && (
-  <ArchitectureViewer
+        {currentTab ===
+          "assistant" && (
+          <RepositoryAssistant
+            repositoryId={
+              repositoryId
+            }
+            repositoryName={
+              repository.projectName
+            }
+          />
+        )}
+
+        {currentTab === "insights" && (
+  <RepositoryInsights
     repository={repository}
   />
 )}
-
-{/* console.log("ARCHITECTURE DIAGRAMS", {
-  architectureDiagram:
-    response.data.repository.architectureDiagram,
-
-  repositoryDiagram:
-    response.data.repository.repositoryDiagram,
-
-  functionDiagram:
-    response.data.repository.functionDiagram,
-
-  executionDiagram:
-    response.data.repository.executionDiagram,
-}); */}
-
-{currentTab ===
-  "assistant" && (
-
-  <RepositoryAssistant
-    repositoryId={
-      repositoryId
-    }
-    repositoryName={
-      repository.projectName
-    }
-  />
-
-)}
-
-{currentTab === "insights" && (
-  <div className="rounded-3xl border border-white/10 p-16 text-center">
-    Insights Coming Soon
-  </div>
-)}
-
-       
-
-
-        {currentTab ===
-          "insights" && (
-
-          <div className="rounded-3xl border border-white/10 p-16 text-center">
-
-            Insights
-            Coming Soon
-
-          </div>
-
-        )}
-
       </div>
-
     </DashboardLayout>
   );
 }

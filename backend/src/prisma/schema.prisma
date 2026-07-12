@@ -93,6 +93,8 @@ model ChatHistory {
   question String
   answer   String
 
+  sources Json?
+
   createdAt DateTime @default(now())
 
   repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
