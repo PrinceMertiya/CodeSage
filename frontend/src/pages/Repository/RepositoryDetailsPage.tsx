@@ -418,17 +418,7 @@ const owner =
   </div>
 )}
 
-        {currentTab ===
-          "assistant" && (
-
-          <div className="rounded-3xl border border-white/10 p-16 text-center">
-
-            AI Assistant
-            Coming Soon
-
-          </div>
-
-        )}
+       
 
 
         {currentTab ===
